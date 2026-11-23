@@ -30,7 +30,7 @@ flowchart TD
 
     Agent -->|Request tool| Tools["File, command, and web tools"]
     Tools -->|Return observation| Agent
-    Tools -->|Web lookup| Web["Tavily or DuckDuckGo Instant Answer"]
+    Tools -->|Default web search| Web["Tavily Search API"]
     Agent <--> Models["Model adapters: OpenAI, MLX-LM, Strata, AirLLM"]
     Agent -->|Final answer| Output["Terminal: answer, evidence judgment when available, and timing"]
 
@@ -80,7 +80,7 @@ cp .env.example .env
 | Setting | Used by |
 | --- | --- |
 | `OPENAI_API_KEY` | OpenAI model requests. `AGENT_MODEL` overrides the default `gpt-4o-mini`. |
-| `TAVILY_API_KEY` | Ranked web search and research mode. For general-agent lookups, `SEARCH_PROVIDER=instant-answer` selects DuckDuckGo’s limited keyless Instant Answer API. |
+| `TAVILY_API_KEY` | Ranked web search in the general agent and in research mode. |
 | `TYPESAFE_API_KEY` | Jev evidence checks. `JEV_MODEL` selects a model version and defaults to `jev-latest`. |
 
 Set credentials in `.env` or in the environment. Existing environment variables take precedence. `.env` and the default `.agent/` trace directory are ignored by Git. Keep [`.env.example`](.env.example) limited to placeholders.
@@ -157,8 +157,8 @@ python3 -m unittest test_research test_search test_benchmark_search -v
 The regression suite uses mocks for provider calls and model generation. The optional MLX chat-template check uses Jinja2 (`python3 -m pip install Jinja2`) and a cached Qwen3-4B tokenizer. The project has been exercised with live OpenAI, MLX, Strata, Tavily, and TypeSafe integrations. AirLLM remains experimental.
 
 ```bash
-# Compare Tavily and DuckDuckGo Instant Answer on 20 public queries.
-python3 benchmark_search.py > search-comparison.json
+# Evaluate Tavily results on 20 public queries.
+python3 benchmark_search.py --provider tavily > tavily-search-report.json
 
 # Replay labeled evidence cases without a provider call.
 python3 benchmark_research.py
@@ -167,7 +167,7 @@ python3 benchmark_research.py
 python3 benchmark_research.py --live --case gpt-names
 ```
 
-For the search comparison, mark `useful_top_5` for each query and provider, then run `python3 benchmark_search.py --score search-comparison.json`. The research benchmark measures label agreement, false `supported` judgments, and latency on frozen excerpts. Jev matched all 18 judged cases in the initial pilot, skipped two empty cases, and had a median latency of 195 ms. A proposed 75% cutoff would have triggered extra searches for four of five adequately supported held-out cases. See the [Jev research plan](JEV_RESEARCH_PLAN.md#first-milestone-results) for the dataset and evaluation details.
+For the Tavily benchmark, mark `useful_top_5` for each query, then run `python3 benchmark_search.py --score tavily-search-report.json`. The research benchmark measures label agreement, false `supported` judgments, and latency on frozen excerpts. Jev matched all 18 judged cases in the initial pilot, skipped two empty cases, and had a median latency of 195 ms. A proposed 75% cutoff would have triggered extra searches for four of five adequately supported held-out cases. See the [Jev research plan](JEV_RESEARCH_PLAN.md#first-milestone-results) for the dataset and evaluation details.
 
 ## Scope and Data Handling
 
