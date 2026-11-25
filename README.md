@@ -171,6 +171,10 @@ python3 benchmark_research.py --live --case gpt-names
 
 For the Tavily benchmark, mark `useful_top_5` for each query, then run `python3 benchmark_search.py --score tavily-search-report.json`. The research benchmark measures label agreement, false `supported` judgments, and latency on frozen excerpts. Jev matched all 18 judged cases in the initial pilot, skipped two empty cases, and had a median latency of 195 ms. A proposed 75% cutoff would have triggered extra searches for four of five adequately supported held-out cases. See the [Jev research plan](JEV_RESEARCH_PLAN.md#first-milestone-results) for the dataset and evaluation details.
 
+### Incident retrieval benchmark
+
+[Milestone 1](INCIDENT_RUNBOOK_PLAN.md#milestone-1-results) compares keyword and hybrid retrieval on frozen Kubernetes runbooks and synthetic incidents. On the same 12 answerable held-out questions, BM25 scored **80.56% Recall@5** and hybrid scored **83.33%**; both found the full evidence set for 7 of 12. Four additional insufficient-evidence cases are reported separately. See the plan for setup and replay commands and the [JSON report](incident_retrieval_report.json) for per-question rankings. This benchmark does not generate answers or call hosted models.
+
 ## Scope and Data Handling
 
 The general agent’s file tools operate with the running user’s permissions. They can access paths outside the project and overwrite existing files. Use a dedicated working directory or an OS sandbox if you need to limit that access.

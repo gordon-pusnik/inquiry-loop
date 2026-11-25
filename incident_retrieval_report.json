@@ -1,0 +1,1093 @@
+{
+  "schema_version": 1,
+  "config": {
+    "cutoff": 5,
+    "candidate_depth": 10,
+    "rrf_k": 60,
+    "keyword": "SQLite FTS5 BM25",
+    "dense": "CPU mean pooling, L2 normalization, exact cosine",
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "embedding_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "max_tokens": 256,
+    "versions": {
+      "sqlite": "3.53.4",
+      "torch": "2.15.0",
+      "transformers": "5.22.2"
+    },
+    "corpus_sha256": {
+      "incident_runbooks.json": "eac6de24f6f4de1e77f637aba9cc52a0d2d8a0d78c8928b437acc22e73533290",
+      "incident_cases.json": "d640967508de5c351125e27d3b2633aeba0aab1ae30c0a00df76d8c99e8286bd"
+    }
+  },
+  "split": "held-out",
+  "questions": 16,
+  "answerable": 12,
+  "insufficient": 4,
+  "metrics": {
+    "keyword": {
+      "recall_at_5": 0.8055555555555556,
+      "full_gold_count": 7,
+      "full_gold_rate": 0.5833333333333334
+    },
+    "hybrid": {
+      "recall_at_5": 0.8333333333333334,
+      "full_gold_count": 7,
+      "full_gold_rate": 0.5833333333333334
+    }
+  },
+  "hybrid_minus_keyword_recall_at_5": 0.02777777777777779,
+  "cases": [
+    {
+      "id": "inc-09",
+      "question": "Why does calling ledger by its short name fail from the checkout namespace?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-dns",
+        "inc-09:lookups",
+        "inc-09:services"
+      ],
+      "partial": [],
+      "rationale": "The short lookup uses the client's namespace search path. Ledger exists only in finance and its qualified name resolves from the same pod.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "inc-09:services",
+              "score": 7.198797280449792
+            },
+            {
+              "id": "inc-09:lookups",
+              "score": 6.717188025458829
+            },
+            {
+              "id": "rb:k8s-debug-init",
+              "score": 3.2315125453137066
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 3.069656286179294
+            },
+            {
+              "id": "rb:k8s-rollout",
+              "score": 2.4667560699728255
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-09:services",
+              "score": 0.03278688524590164
+            },
+            {
+              "id": "inc-09:lookups",
+              "score": 0.03225806451612903
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 0.03149801587301587
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 0.030776515151515152
+            },
+            {
+              "id": "rb:k8s-debug-init",
+              "score": 0.03057889822595705
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        }
+      }
+    },
+    {
+      "id": "inc-10",
+      "question": "Did the worker's new configuration break service discovery, or is cluster DNS failing generally?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-dns",
+        "inc-10:config",
+        "inc-10:check"
+      ],
+      "partial": [],
+      "rationale": "The configured name contains the wrong namespace. The correct name and a control name resolve from the affected client, so a general DNS failure does not explain this lookup.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "inc-10:config",
+              "score": 3.738352468600299
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 3.6818977938632726
+            },
+            {
+              "id": "inc-10:check",
+              "score": 2.8376901005847666
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 2.339131174234331
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 1.3967910049470624
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-10:config",
+              "score": 0.03278688524590164
+            },
+            {
+              "id": "inc-10:check",
+              "score": 0.03200204813108039
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 0.03200204813108039
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 0.03125
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.030536130536130537
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        }
+      }
+    },
+    {
+      "id": "inc-11",
+      "question": "Is the lookup for inventory failing because the caller is in the wrong namespace or because its DNS server is failing?",
+      "answerable": false,
+      "gold": [],
+      "partial": [
+        "rb:k8s-dns",
+        "inc-11:client"
+      ],
+      "rationale": "The application only reports a generic resolver failure. The Service namespace and short-name, qualified-name, and control lookups from the failing pod are needed to distinguish the causes.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "rb:k8s-dns",
+              "score": 6.57697471507858
+            },
+            {
+              "id": "inc-11:client",
+              "score": 4.500421606548808
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 1.299317355119915
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.8912668468623012
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 0.7229372893280683
+            }
+          ],
+          "recall": null,
+          "full_gold": null
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-11:client",
+              "score": 0.03252247488101534
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 0.03252247488101534
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 0.03125763125763126
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 0.03125763125763126
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.030776515151515152
+            }
+          ],
+          "recall": null,
+          "full_gold": null
+        }
+      }
+    },
+    {
+      "id": "inc-12",
+      "question": "Why does the quotes Service have no backends when all three quotes pods are Ready?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-service",
+        "inc-12:service",
+        "inc-12:pods"
+      ],
+      "partial": [],
+      "rationale": "The selector no longer matches the pods' labels, leaving the Service without endpoints even though the pods themselves are Ready.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "inc-12:pods",
+              "score": 10.559811944595978
+            },
+            {
+              "id": "inc-12:service",
+              "score": 3.7079997081872262
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 2.7784258882564856
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 2.16400361453521
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 1.7123512677513093
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-12:pods",
+              "score": 0.03278688524590164
+            },
+            {
+              "id": "inc-12:service",
+              "score": 0.03225806451612903
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 0.031024531024531024
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 0.030776515151515152
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.03055037313432836
+            }
+          ],
+          "recall": 0.6666666666666666,
+          "full_gold": false
+        }
+      }
+    },
+    {
+      "id": "inc-13",
+      "question": "Why do calls through the profile Service fail while calls straight to the profile pod succeed?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-service",
+        "inc-13:service",
+        "inc-13:checks"
+      ],
+      "partial": [],
+      "rationale": "The Service selects the right pod but forwards to 8081, where nothing is listening. The application responds on 8080 instead.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "rb:k8s-service",
+              "score": 4.727779610096378
+            },
+            {
+              "id": "inc-13:service",
+              "score": 3.646554590265403
+            },
+            {
+              "id": "inc-13:checks",
+              "score": 2.538920107684659
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 2.447547145224669
+            },
+            {
+              "id": "rb:k8s-debug-init",
+              "score": 2.142762270778787
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-13:checks",
+              "score": 0.032266458495966696
+            },
+            {
+              "id": "inc-13:service",
+              "score": 0.03225806451612903
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 0.032018442622950824
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 0.031009615384615385
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.03057889822595705
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        }
+      }
+    },
+    {
+      "id": "inc-14",
+      "question": "Is search unreachable because its Service selects no pods or because it forwards to the wrong port?",
+      "answerable": false,
+      "gold": [],
+      "partial": [
+        "rb:k8s-service",
+        "inc-14:request"
+      ],
+      "rationale": "Name resolution and pod readiness do not establish Service routing. The EndpointSlice, Service selector and targetPort, and listener port would distinguish the alternatives.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "rb:k8s-service",
+              "score": 6.630268419296483
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 5.287592324644167
+            },
+            {
+              "id": "inc-14:request",
+              "score": 2.4674943878750057
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 2.18654772506553
+            },
+            {
+              "id": "rb:k8s-rollout",
+              "score": 1.3772920902960426
+            }
+          ],
+          "recall": null,
+          "full_gold": null
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "rb:k8s-service",
+              "score": 0.03252247488101534
+            },
+            {
+              "id": "inc-14:request",
+              "score": 0.032266458495966696
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 0.03200204813108039
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.030776515151515152
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 0.030330882352941176
+            }
+          ],
+          "recall": null,
+          "full_gold": null
+        }
+      }
+    },
+    {
+      "id": "inc-15",
+      "question": "What is keeping archive-0 from scheduling even though the worker pool has free capacity?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-pvc",
+        "inc-15:scheduler",
+        "inc-15:claim"
+      ],
+      "partial": [],
+      "rationale": "The scheduler is blocked by an unbound immediate claim. Its requested class is missing, so the claim cannot be provisioned through that class.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "inc-15:scheduler",
+              "score": 3.5004285173162994
+            },
+            {
+              "id": "inc-15:claim",
+              "score": 2.792173188216284
+            },
+            {
+              "id": "rb:k8s-eviction",
+              "score": 2.4373339628165303
+            },
+            {
+              "id": "rb:k8s-debug-init",
+              "score": 2.4055766480229366
+            },
+            {
+              "id": "rb:k8s-hpa",
+              "score": 1.1477901015530756
+            }
+          ],
+          "recall": 0.6666666666666666,
+          "full_gold": false
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "rb:k8s-eviction",
+              "score": 0.032266458495966696
+            },
+            {
+              "id": "inc-15:scheduler",
+              "score": 0.032018442622950824
+            },
+            {
+              "id": "inc-15:claim",
+              "score": 0.0315136476426799
+            },
+            {
+              "id": "rb:k8s-resources",
+              "score": 0.030621785881252923
+            },
+            {
+              "id": "rb:k8s-hpa",
+              "score": 0.030309988518943745
+            }
+          ],
+          "recall": 0.6666666666666666,
+          "full_gold": false
+        }
+      }
+    },
+    {
+      "id": "inc-16",
+      "question": "Why won't the importer claim bind to the available manual volume?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-pvc",
+        "inc-16:claim",
+        "inc-16:volume"
+      ],
+      "partial": [],
+      "rationale": "The claim explicitly requires import-pv and asks for more capacity than that volume offers. Matching class and access mode alone are not sufficient for binding.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "rb:k8s-pvc",
+              "score": 9.414096579071357
+            },
+            {
+              "id": "inc-16:claim",
+              "score": 3.263900722455283
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 2.9385300221453585
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 1.3445472228452433
+            },
+            {
+              "id": "rb:k8s-eviction",
+              "score": 1.1940548305970593
+            }
+          ],
+          "recall": 0.6666666666666666,
+          "full_gold": false
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-16:claim",
+              "score": 0.03252247488101534
+            },
+            {
+              "id": "rb:k8s-pvc",
+              "score": 0.032266458495966696
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 0.03149801587301587
+            },
+            {
+              "id": "inc-16:volume",
+              "score": 0.03128054740957967
+            },
+            {
+              "id": "rb:k8s-eviction",
+              "score": 0.030309988518943745
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        }
+      }
+    },
+    {
+      "id": "inc-17",
+      "question": "Is analytics-data waiting for a consumer by design, or has provisioning failed?",
+      "answerable": false,
+      "gold": [],
+      "partial": [
+        "rb:k8s-pvc",
+        "inc-17:claim"
+      ],
+      "rationale": "Pending alone does not distinguish deferred binding from a provisioning failure. The StorageClass binding mode, PVC events, and consumer scheduling status are missing.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "inc-17:claim",
+              "score": 4.558924835720946
+            },
+            {
+              "id": "rb:k8s-pvc",
+              "score": 2.978692801299817
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 1.8344829488794903
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 1.1873857487053794
+            },
+            {
+              "id": "rb:k8s-resources",
+              "score": 0.24291121526470377
+            }
+          ],
+          "recall": null,
+          "full_gold": null
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-17:claim",
+              "score": 0.03278688524590164
+            },
+            {
+              "id": "rb:k8s-pvc",
+              "score": 0.0315136476426799
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.03125
+            },
+            {
+              "id": "rb:k8s-rollout",
+              "score": 0.0304147465437788
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 0.030158730158730156
+            }
+          ],
+          "recall": null,
+          "full_gold": null
+        }
+      }
+    },
+    {
+      "id": "inc-18",
+      "question": "Why does the queue worker's HPA show unknown CPU utilization when CPU samples exist?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-hpa",
+        "inc-18:hpa",
+        "inc-18:template"
+      ],
+      "partial": [],
+      "rationale": "A CPU utilization target is relative to CPU requests. Available usage samples do not supply the missing CPU request.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "inc-18:hpa",
+              "score": 14.864100114037644
+            },
+            {
+              "id": "rb:k8s-hpa",
+              "score": 7.038300420497029
+            },
+            {
+              "id": "inc-18:template",
+              "score": 5.981984259717782
+            },
+            {
+              "id": "rb:k8s-pvc",
+              "score": 2.6824366955719228
+            },
+            {
+              "id": "rb:k8s-resources",
+              "score": 2.3861307863857526
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-18:hpa",
+              "score": 0.03278688524590164
+            },
+            {
+              "id": "inc-18:template",
+              "score": 0.03200204813108039
+            },
+            {
+              "id": "rb:k8s-hpa",
+              "score": 0.03200204813108039
+            },
+            {
+              "id": "rb:k8s-resources",
+              "score": 0.031009615384615385
+            },
+            {
+              "id": "rb:k8s-pvc",
+              "score": 0.03055037313432836
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        }
+      }
+    },
+    {
+      "id": "inc-19",
+      "question": "Why did pod-wide memory autoscaling stop calculating utilization after the log sidecar was added?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-hpa",
+        "inc-19:hpa",
+        "inc-19:containers"
+      ],
+      "partial": [],
+      "rationale": "The pod-wide memory utilization calculation needs memory requests for the containers. The new sidecar lacks one even though the main process has one and both have usage samples.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "inc-19:containers",
+              "score": 6.455100369307943
+            },
+            {
+              "id": "rb:k8s-hpa",
+              "score": 5.969833825202695
+            },
+            {
+              "id": "inc-19:hpa",
+              "score": 4.867709421233539
+            },
+            {
+              "id": "rb:k8s-pvc",
+              "score": 1.7111277379179928
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 1.3500504107951516
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-19:containers",
+              "score": 0.03278688524590164
+            },
+            {
+              "id": "inc-19:hpa",
+              "score": 0.03200204813108039
+            },
+            {
+              "id": "rb:k8s-hpa",
+              "score": 0.03200204813108039
+            },
+            {
+              "id": "rb:k8s-resources",
+              "score": 0.030776515151515152
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.030309988518943745
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        }
+      }
+    },
+    {
+      "id": "inc-20",
+      "question": "Why can't the node drain evict an ingest pod while the service is healthy?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-pdb",
+        "inc-20:drain",
+        "inc-20:budget"
+      ],
+      "partial": [],
+      "rationale": "The three healthy replicas exactly meet minAvailable. Evicting any one voluntarily would breach the budget, and the API explicitly declines it.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "rb:k8s-pdb",
+              "score": 7.360353815608108
+            },
+            {
+              "id": "inc-20:drain",
+              "score": 6.333760380522189
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 4.294581471103158
+            },
+            {
+              "id": "rb:k8s-eviction",
+              "score": 3.639883317700877
+            },
+            {
+              "id": "rb:k8s-debug-init",
+              "score": 3.551411521037891
+            }
+          ],
+          "recall": 0.6666666666666666,
+          "full_gold": false
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-20:drain",
+              "score": 0.03252247488101534
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 0.03177805800756621
+            },
+            {
+              "id": "rb:k8s-eviction",
+              "score": 0.031754032258064516
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.031024531024531024
+            },
+            {
+              "id": "rb:k8s-debug-init",
+              "score": 0.031009615384615385
+            }
+          ],
+          "recall": 0.6666666666666666,
+          "full_gold": false
+        }
+      }
+    },
+    {
+      "id": "inc-21",
+      "question": "Why did the maintenance drain accept the first eviction but reject the next one?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-pdb",
+        "inc-21:drain",
+        "inc-21:budget"
+      ],
+      "partial": [],
+      "rationale": "The first eviction consumed the only allowed disruption. The next request was rejected while the replacement was still not Ready.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "rb:k8s-pdb",
+              "score": 6.4386274288902845
+            },
+            {
+              "id": "inc-21:drain",
+              "score": 3.251851932882978
+            },
+            {
+              "id": "rb:k8s-eviction",
+              "score": 1.2501106301668552
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 0.9966505005627743
+            },
+            {
+              "id": "inc-21:budget",
+              "score": 0.9784015323341377
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-21:drain",
+              "score": 0.03252247488101534
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 0.032266458495966696
+            },
+            {
+              "id": "rb:k8s-eviction",
+              "score": 0.03200204813108039
+            },
+            {
+              "id": "inc-21:budget",
+              "score": 0.031009615384615385
+            },
+            {
+              "id": "rb:k8s-debug-init",
+              "score": 0.03007688828584351
+            }
+          ],
+          "recall": 1.0,
+          "full_gold": true
+        }
+      }
+    },
+    {
+      "id": "inc-22",
+      "question": "Why is the app container still waiting even though the pod has been scheduled and its images are present?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-debug-init",
+        "inc-22:status",
+        "inc-22:logs"
+      ],
+      "partial": [],
+      "rationale": "The init container repeatedly exits because its required config file is absent. The app cannot start until init succeeds.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "inc-22:status",
+              "score": 6.5148590627916265
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 2.2418861746518965
+            },
+            {
+              "id": "rb:k8s-pvc",
+              "score": 1.9614920604019215
+            },
+            {
+              "id": "rb:k8s-rollout",
+              "score": 1.8606027889421815
+            },
+            {
+              "id": "rb:k8s-resources",
+              "score": 1.7216818288228575
+            }
+          ],
+          "recall": 0.3333333333333333,
+          "full_gold": false
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-22:status",
+              "score": 0.03278688524590164
+            },
+            {
+              "id": "rb:k8s-resources",
+              "score": 0.03125763125763126
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.031054405392392875
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 0.030834914611005692
+            },
+            {
+              "id": "rb:k8s-debug-init",
+              "score": 0.030776515151515152
+            }
+          ],
+          "recall": 0.6666666666666666,
+          "full_gold": false
+        }
+      }
+    },
+    {
+      "id": "inc-23",
+      "question": "What is keeping the new search worker in initialization if nothing is crashing?",
+      "answerable": true,
+      "gold": [
+        "rb:k8s-debug-init",
+        "inc-23:status",
+        "inc-23:logs"
+      ],
+      "partial": [],
+      "rationale": "The second init container is still running and polling for a dependency, so the main worker has not started. The logs do not establish why the dependency returns 503.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "inc-23:status",
+              "score": 3.1863495578504244
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 2.7433846102173955
+            },
+            {
+              "id": "rb:k8s-service",
+              "score": 6.550038666291353e-06
+            },
+            {
+              "id": "rb:k8s-hpa",
+              "score": 6.515700630165386e-06
+            },
+            {
+              "id": "rb:k8s-pvc",
+              "score": 6.303191458235098e-06
+            }
+          ],
+          "recall": 0.3333333333333333,
+          "full_gold": false
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-23:status",
+              "score": 0.03278688524590164
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 0.031054405392392875
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.031054405392392875
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 0.03057889822595705
+            },
+            {
+              "id": "rb:k8s-resources",
+              "score": 0.030536130536130537
+            }
+          ],
+          "recall": 0.3333333333333333,
+          "full_gold": false
+        }
+      }
+    },
+    {
+      "id": "inc-24",
+      "question": "Is prepare-data looping because it cannot read its input or because its output directory is unwritable?",
+      "answerable": false,
+      "gold": [],
+      "partial": [
+        "rb:k8s-debug-init",
+        "inc-24:status"
+      ],
+      "rationale": "The generic exit code identifies the failing init container but not the failing operation. Logs from a terminated attempt or a termination message with the error are needed.",
+      "retrieval": {
+        "keyword": {
+          "ranked": [
+            {
+              "id": "inc-24:status",
+              "score": 4.514882905728983
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 2.8893024244358276
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 1.7821925416635707
+            },
+            {
+              "id": "rb:k8s-pdb",
+              "score": 1.2991054223914058
+            },
+            {
+              "id": "rb:k8s-resources",
+              "score": 0.292554825611199
+            }
+          ],
+          "recall": null,
+          "full_gold": null
+        },
+        "hybrid": {
+          "ranked": [
+            {
+              "id": "inc-24:status",
+              "score": 0.03278688524590164
+            },
+            {
+              "id": "rb:k8s-dns",
+              "score": 0.0315136476426799
+            },
+            {
+              "id": "rb:k8s-resources",
+              "score": 0.03125763125763126
+            },
+            {
+              "id": "rb:k8s-debug-init",
+              "score": 0.031054405392392875
+            },
+            {
+              "id": "rb:k8s-probes",
+              "score": 0.030798389007344232
+            }
+          ],
+          "recall": null,
+          "full_gold": null
+        }
+      }
+    }
+  ]
+}

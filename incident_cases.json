@@ -1,0 +1,333 @@
+[
+  {
+    "id": "inc-01",
+    "family": "http-probe-failures",
+    "split": "dev",
+    "question": "Why is catalog running but not Ready during the database switchover?",
+    "answerable": true,
+    "gold": ["rb:k8s-probes", "inc-01:probes", "inc-01:app"],
+    "partial": [],
+    "rationale": "Readiness is failing because the app's readiness endpoint returns 503 when it cannot connect to the database. The liveness check still passes, so the container can stay running.",
+    "observations": [
+      {"id": "inc-01:probes", "text": "Pod catalog-7f: Running, Ready=False, restart count 0. Readiness probe failed: HTTP probe failed with statuscode: 503. Liveness GET /live returned 200."},
+      {"id": "inc-01:app", "text": "Catalog app log: GET /ready -> 503; database connection timed out during switchover."}
+    ]
+  },
+  {
+    "id": "inc-02",
+    "family": "http-probe-failures",
+    "split": "dev",
+    "question": "What keeps restarting thumbnail before its HTTP server can start?",
+    "answerable": true,
+    "gold": ["rb:k8s-probes", "inc-02:events", "inc-02:timing"],
+    "partial": [],
+    "rationale": "The startup probe exhausts its retries before the server listens. The kubelet event identifies that failure as the restart trigger.",
+    "observations": [
+      {"id": "inc-02:events", "text": "Each thumbnail attempt ends with kubelet event: Container thumbnail failed startup probe, will be restarted. The probe's HTTP request to port 8080 gets connection refused."},
+      {"id": "inc-02:timing", "text": "Startup probe: periodSeconds=5, failureThreshold=3. On a profiling replica with the same image and no probes, thumbnail first listens on :8080 after 42 seconds of cache warmup."}
+    ]
+  },
+  {
+    "id": "inc-03",
+    "family": "deployment-stalls",
+    "split": "dev",
+    "question": "What does ProgressDeadlineExceeded mean here, and why did the new revision stop making progress?",
+    "answerable": true,
+    "gold": ["rb:k8s-rollout", "inc-03:deployment", "inc-03:replicas"],
+    "partial": [],
+    "rationale": "The deadline reports stalled progress. The new ReplicaSet cannot create pods because of quota, while the old revision still has available replicas.",
+    "observations": [
+      {"id": "inc-03:deployment", "text": "Deployment billing: Progressing=False, reason=ProgressDeadlineExceeded; all three available replicas belong to the old revision."},
+      {"id": "inc-03:replicas", "text": "New ReplicaSet billing-688d has zero pods. FailedCreate: pods is forbidden: exceeded quota: team-compute, requested: requests.cpu=500m, used: requests.cpu=4, limited: requests.cpu=4."}
+    ]
+  },
+  {
+    "id": "inc-04",
+    "family": "deployment-stalls",
+    "split": "dev",
+    "question": "Did the release stall because the new pods could not pull their image or because they never became available after starting?",
+    "answerable": false,
+    "gold": [],
+    "partial": ["rb:k8s-rollout", "inc-04:release"],
+    "rationale": "The Deployment confirms a stall, not its cause. Pod status and events from the new ReplicaSet are needed to distinguish image pull failures from failures after startup.",
+    "observations": [
+      {"id": "inc-04:release", "text": "Deployment receipts: Progressing=False, reason=ProgressDeadlineExceeded. No new-revision replicas became available before the deadline."}
+    ]
+  },
+  {
+    "id": "inc-05",
+    "family": "node-disk-evictions",
+    "split": "dev",
+    "question": "Was the batch pod removed because its node ran low on disk or because the autoscaler scaled it down?",
+    "answerable": true,
+    "gold": ["rb:k8s-eviction", "inc-05:pod", "inc-05:node"],
+    "partial": [],
+    "rationale": "The kubelet reports an ephemeral-storage eviction and the same node reported DiskPressure at the time. Scaling does not explain that recorded termination.",
+    "observations": [
+      {"id": "inc-05:pod", "text": "14:06 UTC, pod export-42 on worker-3: phase=Failed, reason=Evicted. The node was low on resource: ephemeral-storage."},
+      {"id": "inc-05:node", "text": "14:05 UTC, worker-3: DiskPressure=True, reason=KubeletHasDiskPressure. The node remained in the pool after the pod was replaced."}
+    ]
+  },
+  {
+    "id": "inc-06",
+    "family": "container-resource-limits",
+    "split": "dev",
+    "question": "Why did renderer latency spike even though the node still had spare CPU?",
+    "answerable": true,
+    "gold": ["rb:k8s-resources", "inc-06:limit", "inc-06:metrics"],
+    "partial": [],
+    "rationale": "The container hit its own CPU limit and was throttled during the slowdown; spare node capacity does not remove that limit.",
+    "observations": [
+      {"id": "inc-06:limit", "text": "Renderer container CPU request=100m, limit=250m. Node CPU utilization stayed below 45%."},
+      {"id": "inc-06:metrics", "text": "During the latency spike, renderer CPU usage plateaued near 250m and 71% of its CPU quota periods were throttled, up from 2%. No container restarts."}
+    ]
+  },
+  {
+    "id": "inc-07",
+    "family": "container-resource-limits",
+    "split": "dev",
+    "question": "What killed the report worker on large exports?",
+    "answerable": true,
+    "gold": ["rb:k8s-resources", "inc-07:status", "inc-07:memory"],
+    "partial": [],
+    "rationale": "The recorded OOM kill and the container's cgroup OOM counter support a memory-limit kill, not CPU throttling or an application exit.",
+    "observations": [
+      {"id": "inc-07:status", "text": "Report worker lastState.terminated: reason=OOMKilled, exitCode=137. Pod restarted the container during a large export."},
+      {"id": "inc-07:memory", "text": "Worker cgroup memory.max was 256 MiB; memory usage approached that limit and the cgroup oom_kill counter increased by one. Node MemoryPressure=False."}
+    ]
+  },
+  {
+    "id": "inc-08",
+    "family": "node-disk-evictions",
+    "split": "dev",
+    "question": "Did low node disk space evict the vanished thumbnail job pod?",
+    "answerable": false,
+    "gold": [],
+    "partial": ["rb:k8s-eviction", "inc-08:node", "inc-08:timeline"],
+    "rationale": "DiskPressure on its node makes eviction plausible, but the pod disappearing does not prove why. The old pod's terminal status or a matching kubelet eviction event is missing.",
+    "observations": [
+      {"id": "inc-08:node", "text": "Worker-6 showed DiskPressure=True at 03:11 UTC."},
+      {"id": "inc-08:timeline", "text": "Thumbnail job pod thumb-29 was last seen on worker-6 at 03:10 UTC and was absent from the next inventory at 03:15 UTC."}
+    ]
+  },
+  {
+    "id": "inc-09",
+    "family": "service-name-resolution",
+    "split": "held-out",
+    "question": "Why does calling ledger by its short name fail from the checkout namespace?",
+    "answerable": true,
+    "gold": ["rb:k8s-dns", "inc-09:lookups", "inc-09:services"],
+    "partial": [],
+    "rationale": "The short lookup uses the client's namespace search path. Ledger exists only in finance and its qualified name resolves from the same pod.",
+    "observations": [
+      {"id": "inc-09:lookups", "text": "From checkout/api-6c: lookup ledger: no such host. Search suffixes start with checkout.svc.cluster.local; ledger.finance.svc.cluster.local resolves to 10.96.42.17."},
+      {"id": "inc-09:services", "text": "Service ledger has ClusterIP 10.96.42.17 in namespace finance. No Service named ledger exists in checkout."}
+    ]
+  },
+  {
+    "id": "inc-10",
+    "family": "service-name-resolution",
+    "split": "held-out",
+    "question": "Did the worker's new configuration break service discovery, or is cluster DNS failing generally?",
+    "answerable": true,
+    "gold": ["rb:k8s-dns", "inc-10:config", "inc-10:check"],
+    "partial": [],
+    "rationale": "The configured name contains the wrong namespace. The correct name and a control name resolve from the affected client, so a general DNS failure does not explain this lookup.",
+    "observations": [
+      {"id": "inc-10:config", "text": "On the affected worker, CACHE_HOST changed to cache.payment.svc.cluster.local. The cache Service still exists in namespace payments."},
+      {"id": "inc-10:check", "text": "From that worker, cache.payment.svc.cluster.local returns NXDOMAIN; cache.payments.svc.cluster.local and kubernetes.default.svc.cluster.local both resolve."}
+    ]
+  },
+  {
+    "id": "inc-11",
+    "family": "service-name-resolution",
+    "split": "held-out",
+    "question": "Is the lookup for inventory failing because the caller is in the wrong namespace or because its DNS server is failing?",
+    "answerable": false,
+    "gold": [],
+    "partial": ["rb:k8s-dns", "inc-11:client"],
+    "rationale": "The application only reports a generic resolver failure. The Service namespace and short-name, qualified-name, and control lookups from the failing pod are needed to distinguish the causes.",
+    "observations": [
+      {"id": "inc-11:client", "text": "Client pod orders-5b in shop logs: cannot resolve inventory. The log does not record a DNS response code."}
+    ]
+  },
+  {
+    "id": "inc-12",
+    "family": "service-backend-routing",
+    "split": "held-out",
+    "question": "Why does the quotes Service have no backends when all three quotes pods are Ready?",
+    "answerable": true,
+    "gold": ["rb:k8s-service", "inc-12:service", "inc-12:pods"],
+    "partial": [],
+    "rationale": "The selector no longer matches the pods' labels, leaving the Service without endpoints even though the pods themselves are Ready.",
+    "observations": [
+      {"id": "inc-12:service", "text": "Service quotes in trading selects app=quotes-v1. Its EndpointSlice has endpoints: []."},
+      {"id": "inc-12:pods", "text": "All three quotes pods in trading are Ready and labeled app=quotes-v2 after a chart upgrade. No pod in trading has app=quotes-v1."}
+    ]
+  },
+  {
+    "id": "inc-13",
+    "family": "service-backend-routing",
+    "split": "held-out",
+    "question": "Why do calls through the profile Service fail while calls straight to the profile pod succeed?",
+    "answerable": true,
+    "gold": ["rb:k8s-service", "inc-13:service", "inc-13:checks"],
+    "partial": [],
+    "rationale": "The Service selects the right pod but forwards to 8081, where nothing is listening. The application responds on 8080 instead.",
+    "observations": [
+      {"id": "inc-13:service", "text": "Service profile: port=80, targetPort=8081. EndpointSlice lists the Ready profile pod 10.244.2.19 on port 8081."},
+      {"id": "inc-13:checks", "text": "From the same client pod, profile name resolves. GET profile:80 and GET 10.244.2.19:8081 both get connection refused; GET 10.244.2.19:8080 returns 200. The app logs show it listens on :8080 only."}
+    ]
+  },
+  {
+    "id": "inc-14",
+    "family": "service-backend-routing",
+    "split": "held-out",
+    "question": "Is search unreachable because its Service selects no pods or because it forwards to the wrong port?",
+    "answerable": false,
+    "gold": [],
+    "partial": ["rb:k8s-service", "inc-14:request"],
+    "rationale": "Name resolution and pod readiness do not establish Service routing. The EndpointSlice, Service selector and targetPort, and listener port would distinguish the alternatives.",
+    "observations": [
+      {"id": "inc-14:request", "text": "From frontend, search resolves to its expected ClusterIP but HTTP connections time out. The search pods are Ready."}
+    ]
+  },
+  {
+    "id": "inc-15",
+    "family": "persistent-volume-binding",
+    "split": "held-out",
+    "question": "What is keeping archive-0 from scheduling even though the worker pool has free capacity?",
+    "answerable": true,
+    "gold": ["rb:k8s-pvc", "inc-15:scheduler", "inc-15:claim"],
+    "partial": [],
+    "rationale": "The scheduler is blocked by an unbound immediate claim. Its requested class is missing, so the claim cannot be provisioned through that class.",
+    "observations": [
+      {"id": "inc-15:scheduler", "text": "archive-0 FailedScheduling: 0/4 nodes are available: pod has unbound immediate PersistentVolumeClaims."},
+      {"id": "inc-15:claim", "text": "PVC archive-data is Pending; storageClassName=archive-ssd. Its event says storageclass.storage.k8s.io \"archive-ssd\" not found."}
+    ]
+  },
+  {
+    "id": "inc-16",
+    "family": "persistent-volume-binding",
+    "split": "held-out",
+    "question": "Why won't the importer claim bind to the available manual volume?",
+    "answerable": true,
+    "gold": ["rb:k8s-pvc", "inc-16:claim", "inc-16:volume"],
+    "partial": [],
+    "rationale": "The claim explicitly requires import-pv and asks for more capacity than that volume offers. Matching class and access mode alone are not sufficient for binding.",
+    "observations": [
+      {"id": "inc-16:claim", "text": "PVC importer-data is Pending: volumeName=import-pv, storageClassName=\"\", request=50Gi, accessModes=[ReadWriteOnce], volumeMode=Filesystem."},
+      {"id": "inc-16:volume", "text": "PV import-pv is Available: storageClassName=\"\", capacity=20Gi, accessModes=[ReadWriteOnce], volumeMode=Filesystem."}
+    ]
+  },
+  {
+    "id": "inc-17",
+    "family": "persistent-volume-binding",
+    "split": "held-out",
+    "question": "Is analytics-data waiting for a consumer by design, or has provisioning failed?",
+    "answerable": false,
+    "gold": [],
+    "partial": ["rb:k8s-pvc", "inc-17:claim"],
+    "rationale": "Pending alone does not distinguish deferred binding from a provisioning failure. The StorageClass binding mode, PVC events, and consumer scheduling status are missing.",
+    "observations": [
+      {"id": "inc-17:claim", "text": "PVC analytics-data, class zonal-standard, has been Pending without a volume for four minutes."}
+    ]
+  },
+  {
+    "id": "inc-18",
+    "family": "hpa-utilization-requests",
+    "split": "held-out",
+    "question": "Why does the queue worker's HPA show unknown CPU utilization when CPU samples exist?",
+    "answerable": true,
+    "gold": ["rb:k8s-hpa", "inc-18:hpa", "inc-18:template"],
+    "partial": [],
+    "rationale": "A CPU utilization target is relative to CPU requests. Available usage samples do not supply the missing CPU request.",
+    "observations": [
+      {"id": "inc-18:hpa", "text": "HPA queue-worker targets CPU AverageUtilization=70%; current target is <unknown>. FailedGetResourceMetric: missing request for cpu in container worker of Pod queue-worker-5fc. Metrics API has CPU samples for the pod."},
+      {"id": "inc-18:template", "text": "Live queue-worker pods: worker has a memory request but no CPU request or limit."}
+    ]
+  },
+  {
+    "id": "inc-19",
+    "family": "hpa-utilization-requests",
+    "split": "held-out",
+    "question": "Why did pod-wide memory autoscaling stop calculating utilization after the log sidecar was added?",
+    "answerable": true,
+    "gold": ["rb:k8s-hpa", "inc-19:hpa", "inc-19:containers"],
+    "partial": [],
+    "rationale": "The pod-wide memory utilization calculation needs memory requests for the containers. The new sidecar lacks one even though the main process has one and both have usage samples.",
+    "observations": [
+      {"id": "inc-19:hpa", "text": "HPA normalize uses a Resource memory AverageUtilization target. The target became <unknown> after the sidecar rollout; the Metrics API still reports memory usage for both containers in every pod."},
+      {"id": "inc-19:containers", "text": "All current normalize pods have requests.memory=256Mi for the main container. The new log sidecar has a CPU request but no memory request in the live pod specs."}
+    ]
+  },
+  {
+    "id": "inc-20",
+    "family": "pod-disruption-budgets",
+    "split": "held-out",
+    "question": "Why can't the node drain evict an ingest pod while the service is healthy?",
+    "answerable": true,
+    "gold": ["rb:k8s-pdb", "inc-20:drain", "inc-20:budget"],
+    "partial": [],
+    "rationale": "The three healthy replicas exactly meet minAvailable. Evicting any one voluntarily would breach the budget, and the API explicitly declines it.",
+    "observations": [
+      {"id": "inc-20:drain", "text": "Drain of worker-8 attempts to evict ingest-6c: Cannot evict pod as it would violate the pod's disruption budget."},
+      {"id": "inc-20:budget", "text": "The matching ingest PDB has minAvailable=3, currentHealthy=3, desiredHealthy=3, disruptionsAllowed=0."}
+    ]
+  },
+  {
+    "id": "inc-21",
+    "family": "pod-disruption-budgets",
+    "split": "held-out",
+    "question": "Why did the maintenance drain accept the first eviction but reject the next one?",
+    "answerable": true,
+    "gold": ["rb:k8s-pdb", "inc-21:drain", "inc-21:budget"],
+    "partial": [],
+    "rationale": "The first eviction consumed the only allowed disruption. The next request was rejected while the replacement was still not Ready.",
+    "observations": [
+      {"id": "inc-21:drain", "text": "Drain evicted stream-a. Seconds later the eviction API rejected stream-b from the same workload with a disruption budget violation."},
+      {"id": "inc-21:budget", "text": "Matching stream PDB: maxUnavailable=1, expectedPods=4. disruptionsAllowed went from 1 to 0 after stream-a's eviction and remained 0 while its replacement was not Ready."}
+    ]
+  },
+  {
+    "id": "inc-22",
+    "family": "init-container-blockers",
+    "split": "held-out",
+    "question": "Why is the app container still waiting even though the pod has been scheduled and its images are present?",
+    "answerable": true,
+    "gold": ["rb:k8s-debug-init", "inc-22:status", "inc-22:logs"],
+    "partial": [],
+    "rationale": "The init container repeatedly exits because its required config file is absent. The app cannot start until init succeeds.",
+    "observations": [
+      {"id": "inc-22:status", "text": "Pod pricing-1: Init:CrashLoopBackOff. prepare-config last terminated with exitCode=1; app container waiting with reason PodInitializing."},
+      {"id": "inc-22:logs", "text": "Previous prepare-config log: open /config/region.yaml: no such file or directory; exiting with status 1."}
+    ]
+  },
+  {
+    "id": "inc-23",
+    "family": "init-container-blockers",
+    "split": "held-out",
+    "question": "What is keeping the new search worker in initialization if nothing is crashing?",
+    "answerable": true,
+    "gold": ["rb:k8s-debug-init", "inc-23:status", "inc-23:logs"],
+    "partial": [],
+    "rationale": "The second init container is still running and polling for a dependency, so the main worker has not started. The logs do not establish why the dependency returns 503.",
+    "observations": [
+      {"id": "inc-23:status", "text": "Pod indexer-2 shows Init:1/2. seed-index completed; wait-for-schema is Running with zero restarts; worker is waiting (PodInitializing)."},
+      {"id": "inc-23:logs", "text": "wait-for-schema logs every five seconds: GET http://schema:8080/ready -> 503; retrying until a 200 response."}
+    ]
+  },
+  {
+    "id": "inc-24",
+    "family": "init-container-blockers",
+    "split": "held-out",
+    "question": "Is prepare-data looping because it cannot read its input or because its output directory is unwritable?",
+    "answerable": false,
+    "gold": [],
+    "partial": ["rb:k8s-debug-init", "inc-24:status"],
+    "rationale": "The generic exit code identifies the failing init container but not the failing operation. Logs from a terminated attempt or a termination message with the error are needed.",
+    "observations": [
+      {"id": "inc-24:status", "text": "Pod digest-0: Init:CrashLoopBackOff. Init container prepare-data last terminated with reason=Error, exitCode=1; restartCount=5."}
+    ]
+  }
+]
