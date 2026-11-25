@@ -44,7 +44,7 @@ class RequestMetrics:
                 "measured_tokens": self.tokens, "measurement_seconds": self.seconds,
                 "tokens_per_second": self.tokens / self.seconds if self.complete and self.calls and self.seconds else None}
 
-    def summary(self, elapsed):
+    def summary(self, elapsed, backend):
         rate = f"{self.tokens / self.seconds:.2f}" if self.complete and self.calls and self.seconds else "N/A"
         suffix = " (includes prompt processing and request overhead)" if rate != "N/A" and self.kind == "request" else ""
-        return f"Processed request in {elapsed:.2f} seconds, tokens per second = {rate}{suffix}"
+        return f"{backend} processed request in {elapsed:.2f} seconds, tokens per second = {rate}{suffix}"

@@ -141,7 +141,7 @@ class ResearchTests(unittest.TestCase):
         self.assertEqual(judge.judge.call_count, 2)
         self.assertNotIn("private prior turn", str(judge.judge.call_args_list))
         self.assertNotIn("private prior turn", str(model.respond.call_args_list[1:]))
-        self.assertEqual(output.getvalue().count("partial (73%, jev-example)\nProcessed request"), 2)
+        self.assertEqual(output.getvalue().count("partial (73%, jev-example)\nopenai processed request"), 2)
 
 
 class JevTests(unittest.TestCase):

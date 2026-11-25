@@ -120,6 +120,8 @@ Jev shadow checking runs by default. A line such as `Jev evidence check (shadow)
 
 ### Interactive Sessions
 
+Use the Left and Right arrow keys to move within a question before submitting it. This works in a terminal when Python has `readline` support.
+
 | Command | Behavior |
 | --- | --- |
 | `/research` | Switch to research with Jev in the current session. |

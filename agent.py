@@ -444,19 +444,24 @@ def _shadow_research(on_evidence):
     return partial(run_research, judge=judge.judge, on_evidence=on_evidence)
 
 
-def _print_run_output(answer, evidence_checks, metrics, elapsed):
+def _print_run_output(answer, evidence_checks, metrics, elapsed, backend):
     print(answer)
     if evidence_checks:
         from research import format_evidence_check
 
         for judgment in evidence_checks:
             print(f"\n{format_evidence_check(judgment)}")
-    print(metrics.summary(elapsed))
+    print(metrics.summary(elapsed, backend))
 
 
 def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS,
-                    runner: SessionRunner | None = None) -> None:
+                    runner: SessionRunner | None = None, *, backend: str) -> None:
     """Reuse one backend; traced sessions retain completed conversation turns."""
+    try:
+        import readline  # Importing enables terminal line editing for input().
+    except ImportError:
+        pass
+
     if runner is None:
         print("Interactive mode: /research, /new, /help, /quit. Each task starts fresh (tracing disabled).")
     else:
@@ -534,7 +539,7 @@ def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS
             except Exception as exc:
                 print(f"Error: {exc}")
                 continue
-            _print_run_output(answer, evidence_checks, metrics, elapsed)
+            _print_run_output(answer, evidence_checks, metrics, elapsed, backend)
     except (EOFError, KeyboardInterrupt):
         print()
     print("Interactive session ended.")
@@ -598,6 +603,7 @@ def main(argv=None) -> int:
         elif args.llm == "mlx":
             options.update(model=args.model)
         model = create_model(args.llm, **options)
+        backend = 'stub' if args.stub else args.llm
         runner = None
         if not args.no_trace:
             store = SessionStore(args.db)
@@ -606,13 +612,10 @@ def main(argv=None) -> int:
                              if isinstance(value, (str, os.PathLike))), type(model).__name__)
             if args.llm == 'strata' and isinstance(getattr(model, 'base_url', None), str):
                 identity += f' @ {model.base_url}'
-            runner = SessionRunner(store, 'stub' if args.stub else args.llm, identity, args.resume)
+            runner = SessionRunner(store, backend, identity, args.resume)
         if args.interactive:
             print(f"Initialized backend in {time.perf_counter() - started:.2f} seconds.")
-            if runner is None:
-                run_interactive(model, " ".join(args.request), max_steps=args.max_steps)
-            else:
-                run_interactive(model, " ".join(args.request), max_steps=args.max_steps, runner=runner)
+            run_interactive(model, " ".join(args.request), max_steps=args.max_steps, runner=runner, backend=backend)
         else:
             request = " ".join(args.request) or "What is in this directory?"
             if runner is None:
@@ -625,7 +628,7 @@ def main(argv=None) -> int:
                     return 1
                 answer = result.answer
             elapsed = time.perf_counter() - started
-            _print_run_output(answer, evidence_checks, metrics, elapsed)
+            _print_run_output(answer, evidence_checks, metrics, elapsed, backend)
             if runner is not None and result.status != RunStatus.COMPLETED:
                 return 2
     except KeyboardInterrupt:

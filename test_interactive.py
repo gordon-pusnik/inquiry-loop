@@ -34,9 +34,9 @@ class InteractiveTests(unittest.TestCase):
         self.assertEqual(model.histories[1][-1]["content"], "second task")
         text = output.getvalue()
         self.assertIn("Initialized backend in 5.00 seconds.", text)
-        self.assertIn("Processed request in 2.00 seconds, tokens per second = 5.00", text)
-        self.assertIn("Processed request in 3.00 seconds, tokens per second = 5.00", text)
-        self.assertEqual(text.count("Processed request"), 2)
+        self.assertIn("mlx processed request in 2.00 seconds, tokens per second = 5.00", text)
+        self.assertIn("mlx processed request in 3.00 seconds, tokens per second = 5.00", text)
+        self.assertEqual(text.count("processed request"), 2)
 
     def test_optional_initial_task_runs_before_input(self):
         model = ReusableModel()
@@ -58,7 +58,7 @@ class InteractiveTests(unittest.TestCase):
         self.assertEqual(model.respond.call_count, 2)
         self.assertIn("Error: bad response", output.getvalue())
         self.assertIn("recovered", output.getvalue())
-        self.assertEqual(output.getvalue().count("Processed request"), 1)
+        self.assertEqual(output.getvalue().count("openai processed request"), 1)
         model.close.assert_called_once()
 
     def test_eof_or_interrupt_at_prompt_closes_backend(self):
@@ -88,7 +88,7 @@ class InteractiveTests(unittest.TestCase):
             self.assertEqual(agent.main(["--no-trace", "--stub", "--interactive"]), 0)
         self.assertEqual(output.getvalue().count("[step 1] list_dir"), 2)
         self.assertEqual(output.getvalue().count("[step 2] read_file"), 2)
-        self.assertEqual(output.getvalue().count("Processed request"), 2)
+        self.assertEqual(output.getvalue().count("stub processed request"), 2)
 
 
 if __name__ == "__main__":
