@@ -1,6 +1,6 @@
 # Cited incident explanations and inference comparison
 
-**Status** — Milestone 1 complete. Cited explanations and the local/hosted inference comparison are not implemented.
+**Status** — Milestones 1 and 2 complete. The local MLX versus hosted inference comparison is not implemented. See [milestone status](MILESTONES.md).
 
 ## Feature goal
 
@@ -73,3 +73,36 @@ python3 benchmark_incidents.py --split dev
 python3 benchmark_incidents.py --split held-out > incident_retrieval_report.json
 python3 -m unittest test_incident_retrieval
 ```
+
+## Milestone 2 results
+
+A paired pilot ran the same 16 held-out cases with `gpt-4o-mini-2024-07-18` at temperature 0, JSON mode, and a 512-token completion cap. Both arms received the same frozen hybrid top-five evidence and used one synthesis call with the same instructions. The diagnostic arm made one deterministic, read-only lookup for at most two omitted observations from the same synthetic incident. It could not run commands, query a cluster, read other incidents, or ask for additional steps. Each arm started a fresh session; the order alternated by case.
+
+Every emitted conclusion had to cite at least one passage actually sent to the model. A model-assisted, unblinded review then judged whether those passages substantiated the claim and whether the conclusion was correct against the full case. Abstention was scored independently against the corpus answerability label; the missing-evidence explanation was reviewed qualitatively. Claim metrics exclude abstentions, so denominator differences matter. The fully correct metric requires the expected status and all emitted conclusions to be correct and supported; it does not establish that an otherwise correct answer was exhaustive.
+
+| Metric | Fixed | Bounded lookup |
+| --- | ---: | ---: |
+| Citation support (per emitted conclusion) | 11/17 | 11/19 |
+| Conclusion correctness (per emitted conclusion) | 14/17 | 15/19 |
+| Diagnose/abstain status correct | 14/16 | 15/16 |
+| Correct abstentions on insufficient cases | 3/4 | 3/4 |
+| Fully correct runs | 10/16 | 10/16 |
+| Failed runs | 0/16 | 0/16 |
+
+The SQLite `tool_result` and `incident_evidence` events show the lookup added evidence in exactly three cases:
+
+- **`inc-20`:** The budget observation let the model name the three-pod minimum. The fixed answer already correctly identified the disruption budget as the immediate blocker.
+- **`inc-22`:** The logs exposed the missing configuration file. Both arms still mislabeled `PodInitializing` as the pod state rather than the application container's waiting reason shown in the incident.
+- **`inc-23`:** The fixed arm abstained on a corpus-answerable case. With logs, the diagnostic arm identified the relevant init step but incorrectly said it returned HTTP 503; it received the 503 from the schema endpoint instead.
+
+`inc-11` and `inc-14` changed abstention outcomes in opposite directions despite identical final evidence within each pair. Those changes cannot be attributed to the lookup. This single pilot shows that extra evidence can add useful specifics, but it did not establish an improvement in fully correct diagnoses or citation support.
+
+The [report](incident_diagnosis_report.json) includes run IDs, trace summaries, answers, and separate grades. The [review file](incident_diagnosis_reviews.json) binds the semantic judgments to the recorded runs. Regrade the published run offline or make a new hosted run with a configured `OPENAI_API_KEY` (only public and synthetic evidence is sent):
+
+```bash
+python3 benchmark_diagnosis.py grade incident_diagnosis_report.json incident_diagnosis_reviews.json
+python3 benchmark_diagnosis.py run > .agent/incident-diagnosis-runs.json
+python3 -m unittest test_incident_diagnosis
+```
+
+A new run needs its own reviews. Full trace events are stored locally in `.agent/incident-diagnosis.sqlite3` by default; identify a run by its `run_id` from the report and query `events` in `id` order or use `SessionStore.events(run_id)`.

@@ -17,15 +17,13 @@ class OpenAIModel:
         self.tool_schemas = tool_schemas
         self.client = OpenAI()
 
-    def respond(self, messages):
+    def respond(self, messages, **completion_options):
         self.last_stats = {}
         started = time.perf_counter()
+        tools = ({"tools": self.tool_schemas, "tool_choice": "auto", "parallel_tool_calls": False}
+                 if self.tool_schemas else {})
         response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-            tools=self.tool_schemas,
-            tool_choice="auto",
-            parallel_tool_calls=False,
+            model=self.model, messages=messages, **tools, **completion_options,
         )
         finish = getattr(response.choices[0], 'finish_reason', None)
         if finish == 'length':

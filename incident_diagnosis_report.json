@@ -1,0 +1,2353 @@
+{
+  "schema_version": 1,
+  "model": "gpt-4o-mini-2024-07-18",
+  "settings": {
+    "temperature": 0,
+    "max_completion_tokens": 512,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "retrieval_report_sha256": "5f79af7bdee726a7bba67949301e02ee1c354384be9be8ff8e0d88f45eaf197a",
+  "runs": [
+    {
+      "case_id": "inc-09",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "a4d19d50b5834f46984c283c85b45874",
+      "run_id": "1ed6739c61fe486e88c903a0d60af7df",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-09:services"
+            ],
+            "claim": "Calling ledger by its short name fails from the checkout namespace because there is no Service named ledger in that namespace."
+          },
+          {
+            "citations": [
+              "inc-09:lookups"
+            ],
+            "claim": "The DNS lookup for ledger from the checkout namespace fails because it does not resolve to any host in that namespace."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-09:services",
+          "inc-09:lookups",
+          "rb:k8s-dns",
+          "rb:k8s-service",
+          "rb:k8s-debug-init"
+        ],
+        "final_ids": [
+          "inc-09:services",
+          "inc-09:lookups",
+          "rb:k8s-dns",
+          "rb:k8s-service",
+          "rb:k8s-debug-init"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-09",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "4decd58f41d84f5cbb3f217639f7d8dc",
+      "run_id": "fed70d95123f41aa810357b96d687c13",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-09:services"
+            ],
+            "claim": "Calling ledger by its short name fails from the checkout namespace because there is no Service named ledger in that namespace."
+          },
+          {
+            "citations": [
+              "inc-09:lookups"
+            ],
+            "claim": "The DNS lookup for ledger from the checkout namespace fails because it does not resolve to any host in that namespace."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-09:services",
+          "inc-09:lookups",
+          "rb:k8s-dns",
+          "rb:k8s-service",
+          "rb:k8s-debug-init"
+        ],
+        "final_ids": [
+          "inc-09:services",
+          "inc-09:lookups",
+          "rb:k8s-dns",
+          "rb:k8s-service",
+          "rb:k8s-debug-init"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-10",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "e259bb8875034eb4af50808c6ec1a693",
+      "run_id": "89193ec8ceda437a9465a6ed9801569a",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-10:config",
+              "inc-10:check"
+            ],
+            "claim": "The worker's new configuration broke service discovery for the cache service."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-10:config",
+          "inc-10:check",
+          "rb:k8s-dns",
+          "rb:k8s-service",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-10:config",
+          "inc-10:check",
+          "rb:k8s-dns",
+          "rb:k8s-service",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-10",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "0fe4d2273d5a41c8a4056fc9078a0345",
+      "run_id": "a75709fc56294c56bc33172da99ada41",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-10:config",
+              "inc-10:check"
+            ],
+            "claim": "The worker's new configuration broke service discovery for the cache service."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-10:config",
+          "inc-10:check",
+          "rb:k8s-dns",
+          "rb:k8s-service",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-10:config",
+          "inc-10:check",
+          "rb:k8s-dns",
+          "rb:k8s-service",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-11",
+      "mode": "fixed",
+      "answerable": false,
+      "session_id": "e59e9bfbca754c2191a34c6328b242bc",
+      "run_id": "f385652c6bdc496289cd0986789d29b0",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [],
+        "missing_evidence": "It is unclear whether the caller is in the wrong namespace or if there is a DNS server failure, as there is no information about the namespace of the caller or the status of the DNS server.",
+        "status": "insufficient"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-11:client",
+          "rb:k8s-dns",
+          "rb:k8s-pdb",
+          "rb:k8s-service",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-11:client",
+          "rb:k8s-dns",
+          "rb:k8s-pdb",
+          "rb:k8s-service",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-11",
+      "mode": "diagnostic",
+      "answerable": false,
+      "session_id": "7886471885fa490f9269294b156d0d6a",
+      "run_id": "6e10096c031147a9ad455dfbb56c7a83",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-11:client",
+              "rb:k8s-dns"
+            ],
+            "claim": "The lookup for inventory is failing because the caller is in the wrong namespace."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-11:client",
+          "rb:k8s-dns",
+          "rb:k8s-pdb",
+          "rb:k8s-service",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-11:client",
+          "rb:k8s-dns",
+          "rb:k8s-pdb",
+          "rb:k8s-service",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-12",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "d871732bfa1541288d9cec02a584d06c",
+      "run_id": "b57c988f2b3a4da19ad711d9469f6c9e",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-12:pods",
+              "inc-12:service"
+            ],
+            "claim": "The quotes Service has no backends because it is configured to select pods with the label app=quotes-v1, but all available pods have the label app=quotes-v2."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-12:pods",
+          "inc-12:service",
+          "rb:k8s-pdb",
+          "rb:k8s-dns",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-12:pods",
+          "inc-12:service",
+          "rb:k8s-pdb",
+          "rb:k8s-dns",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-12",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "fedef87993e446598c3b67d010a545b7",
+      "run_id": "2f4c59c886a64b8aaac4ad95c36c4d30",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-12:pods",
+              "inc-12:service"
+            ],
+            "claim": "The quotes Service has no backends because it is configured to select pods with the label app=quotes-v1, but all available pods have the label app=quotes-v2."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-12:pods",
+          "inc-12:service",
+          "rb:k8s-pdb",
+          "rb:k8s-dns",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-12:pods",
+          "inc-12:service",
+          "rb:k8s-pdb",
+          "rb:k8s-dns",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-13",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "bdefb6e1fad34ecb8191dbf296ab3bed",
+      "run_id": "db69a96e7ed04d06b419e6996a408fd6",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-13:checks",
+              "inc-13:service"
+            ],
+            "claim": "Calls through the profile Service fail because the Service is configured to route traffic to port 8081, but the profile pod only listens on port 8080."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-13:checks",
+          "inc-13:service",
+          "rb:k8s-service",
+          "rb:k8s-pdb",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-13:checks",
+          "inc-13:service",
+          "rb:k8s-service",
+          "rb:k8s-pdb",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-13",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "80c9d8be4f2d49fea6fcbd85c7af0812",
+      "run_id": "3bd92e6ef61946b49854578ac07319b1",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-13:checks",
+              "inc-13:service"
+            ],
+            "claim": "Calls through the profile Service fail because the Service is configured to route traffic to port 8081, but the profile pod only listens on port 8080."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-13:checks",
+          "inc-13:service",
+          "rb:k8s-service",
+          "rb:k8s-pdb",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-13:checks",
+          "inc-13:service",
+          "rb:k8s-service",
+          "rb:k8s-pdb",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-14",
+      "mode": "diagnostic",
+      "answerable": false,
+      "session_id": "276a48e25047455481d3a3aeaca1d9c6",
+      "run_id": "5c1b163d4b7c48bb8b2106a4eac5c78f",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [],
+        "missing_evidence": "It is unclear whether the search Service is unreachable due to selecting no pods or because it forwards to the wrong port. Evidence regarding the Service's selector and port configuration is needed.",
+        "status": "insufficient"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "rb:k8s-service",
+          "inc-14:request",
+          "rb:k8s-dns",
+          "rb:k8s-probes",
+          "rb:k8s-pdb"
+        ],
+        "final_ids": [
+          "rb:k8s-service",
+          "inc-14:request",
+          "rb:k8s-dns",
+          "rb:k8s-probes",
+          "rb:k8s-pdb"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-14",
+      "mode": "fixed",
+      "answerable": false,
+      "session_id": "4936fbdb7ef9496bbbe9c5ef3ff2d0ac",
+      "run_id": "2795ca0ad903419f8ad6b4a1f22beee5",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-14:request",
+              "rb:k8s-service"
+            ],
+            "claim": "Search is unreachable because its Service selects no pods."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "rb:k8s-service",
+          "inc-14:request",
+          "rb:k8s-dns",
+          "rb:k8s-probes",
+          "rb:k8s-pdb"
+        ],
+        "final_ids": [
+          "rb:k8s-service",
+          "inc-14:request",
+          "rb:k8s-dns",
+          "rb:k8s-probes",
+          "rb:k8s-pdb"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-15",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "eb7276743ded41e6a64fce38d11bf89d",
+      "run_id": "d986624be7e54087929f284569983fdc",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-15:scheduler"
+            ],
+            "claim": "archive-0 is unable to schedule because it has unbound immediate PersistentVolumeClaims."
+          },
+          {
+            "citations": [
+              "inc-15:claim"
+            ],
+            "claim": "The PersistentVolumeClaim for archive-data is in a Pending state due to the storage class 'archive-ssd' not being found."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "rb:k8s-eviction",
+          "inc-15:scheduler",
+          "inc-15:claim",
+          "rb:k8s-resources",
+          "rb:k8s-hpa"
+        ],
+        "final_ids": [
+          "rb:k8s-eviction",
+          "inc-15:scheduler",
+          "inc-15:claim",
+          "rb:k8s-resources",
+          "rb:k8s-hpa"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-15",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "adc294bd773a4606908717d929ae68af",
+      "run_id": "158d5b175fc84a26a9b6e64f5ba5344e",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-15:scheduler"
+            ],
+            "claim": "archive-0 is unable to schedule because it has unbound immediate PersistentVolumeClaims."
+          },
+          {
+            "citations": [
+              "inc-15:claim"
+            ],
+            "claim": "The PersistentVolumeClaim for archive-data is in a Pending state due to the storage class 'archive-ssd' not being found."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "rb:k8s-eviction",
+          "inc-15:scheduler",
+          "inc-15:claim",
+          "rb:k8s-resources",
+          "rb:k8s-hpa"
+        ],
+        "final_ids": [
+          "rb:k8s-eviction",
+          "inc-15:scheduler",
+          "inc-15:claim",
+          "rb:k8s-resources",
+          "rb:k8s-hpa"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-16",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "c8268c1848954ddcbe64066ef0fe5fde",
+      "run_id": "3b113c2b544d499496f1e7c1ce3ae727",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-16:claim",
+              "rb:k8s-pvc"
+            ],
+            "claim": "The importer claim cannot bind to the available manual volume because the storage class name is empty, which disables dynamic provisioning."
+          },
+          {
+            "citations": [
+              "inc-16:volume",
+              "rb:k8s-pvc"
+            ],
+            "claim": "The available volume has a capacity of 20Gi, which does not match the 50Gi requested by the importer claim."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-16:claim",
+          "rb:k8s-pvc",
+          "rb:k8s-dns",
+          "inc-16:volume",
+          "rb:k8s-eviction"
+        ],
+        "final_ids": [
+          "inc-16:claim",
+          "rb:k8s-pvc",
+          "rb:k8s-dns",
+          "inc-16:volume",
+          "rb:k8s-eviction"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-16",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "4aa4fa1ba8b94464845b1021aa977d3b",
+      "run_id": "0a44d4f4437c478cae159e8a7d785caf",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-16:claim",
+              "rb:k8s-pvc"
+            ],
+            "claim": "The importer claim cannot bind to the available manual volume because the storage class name is empty, which disables dynamic provisioning."
+          },
+          {
+            "citations": [
+              "inc-16:volume"
+            ],
+            "claim": "The available volume has a capacity of 20Gi, which does not match the 50Gi requested by the importer claim."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-16:claim",
+          "rb:k8s-pvc",
+          "rb:k8s-dns",
+          "inc-16:volume",
+          "rb:k8s-eviction"
+        ],
+        "final_ids": [
+          "inc-16:claim",
+          "rb:k8s-pvc",
+          "rb:k8s-dns",
+          "inc-16:volume",
+          "rb:k8s-eviction"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-17",
+      "mode": "fixed",
+      "answerable": false,
+      "session_id": "e907b7687f104cda8a06ec3426dae226",
+      "run_id": "7362034765174f608baa5b6067144699",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [],
+        "missing_evidence": "It is unclear whether the PVC is waiting for a consumer by design or if provisioning has failed, as there is no information on the configuration of the StorageClass or whether any matching PersistentVolumes exist.",
+        "status": "insufficient"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-17:claim",
+          "rb:k8s-pvc",
+          "rb:k8s-probes",
+          "rb:k8s-rollout",
+          "rb:k8s-dns"
+        ],
+        "final_ids": [
+          "inc-17:claim",
+          "rb:k8s-pvc",
+          "rb:k8s-probes",
+          "rb:k8s-rollout",
+          "rb:k8s-dns"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-17",
+      "mode": "diagnostic",
+      "answerable": false,
+      "session_id": "0ae8a59c630a403288ddaaaaabb0804b",
+      "run_id": "7cb90eb0bc0c4d8baf6ac2f98f306f50",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [],
+        "missing_evidence": "It is unclear whether the PVC is waiting for a consumer by design or if there was a failure in provisioning, as there is no information on the configuration of the StorageClass or whether any matching PersistentVolumes exist.",
+        "status": "insufficient"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-17:claim",
+          "rb:k8s-pvc",
+          "rb:k8s-probes",
+          "rb:k8s-rollout",
+          "rb:k8s-dns"
+        ],
+        "final_ids": [
+          "inc-17:claim",
+          "rb:k8s-pvc",
+          "rb:k8s-probes",
+          "rb:k8s-rollout",
+          "rb:k8s-dns"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-18",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "11bba1b3b6ed4316bb3b239bd317a0a0",
+      "run_id": "5cb04f0c891c4b579b0f178bc5952278",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-18:hpa",
+              "inc-18:template",
+              "rb:k8s-hpa"
+            ],
+            "claim": "The queue worker's HPA shows unknown CPU utilization because the worker pod does not have a CPU request defined."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-18:hpa",
+          "inc-18:template",
+          "rb:k8s-hpa",
+          "rb:k8s-resources",
+          "rb:k8s-pvc"
+        ],
+        "final_ids": [
+          "inc-18:hpa",
+          "inc-18:template",
+          "rb:k8s-hpa",
+          "rb:k8s-resources",
+          "rb:k8s-pvc"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-18",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "f64fb040ad4c419e8ddf3b578762f78b",
+      "run_id": "3d772346528c45e5b1f531ebc320f200",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-18:hpa",
+              "inc-18:template",
+              "rb:k8s-hpa"
+            ],
+            "claim": "The queue worker's HPA shows unknown CPU utilization because the worker pod does not have a CPU request defined."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-18:hpa",
+          "inc-18:template",
+          "rb:k8s-hpa",
+          "rb:k8s-resources",
+          "rb:k8s-pvc"
+        ],
+        "final_ids": [
+          "inc-18:hpa",
+          "inc-18:template",
+          "rb:k8s-hpa",
+          "rb:k8s-resources",
+          "rb:k8s-pvc"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-19",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "a668b996decc4db7ab4f737fe08a9364",
+      "run_id": "302908befb584a4a845dc6cbf9fa06a7",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-19:hpa",
+              "rb:k8s-hpa"
+            ],
+            "claim": "The addition of the log sidecar caused the target utilization for memory to become unknown because the sidecar did not have a memory request set."
+          },
+          {
+            "citations": [
+              "rb:k8s-hpa"
+            ],
+            "claim": "The Horizontal Pod Autoscaler (HPA) requires all containers in a pod to have relevant resource requests set to calculate utilization."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-19:containers",
+          "inc-19:hpa",
+          "rb:k8s-hpa",
+          "rb:k8s-resources",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-19:containers",
+          "inc-19:hpa",
+          "rb:k8s-hpa",
+          "rb:k8s-resources",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-19",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "68fa943c6bd7481c8650159db26b2320",
+      "run_id": "0e974ad379824d8f83746c8afd4cbc97",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-19:containers",
+              "inc-19:hpa"
+            ],
+            "claim": "The addition of the log sidecar caused the target utilization for memory to become unknown because the sidecar did not have a memory request specified."
+          },
+          {
+            "citations": [
+              "rb:k8s-hpa"
+            ],
+            "claim": "The Horizontal Pod Autoscaler (HPA) requires all containers in a pod to have relevant resource requests set to calculate utilization; the absence of a memory request for the sidecar led to the inability to define memory utilization."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-19:containers",
+          "inc-19:hpa",
+          "rb:k8s-hpa",
+          "rb:k8s-resources",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-19:containers",
+          "inc-19:hpa",
+          "rb:k8s-hpa",
+          "rb:k8s-resources",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-20",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "4cfc386170774f67b7653d5d4ba1016e",
+      "run_id": "8ab2edbc3b404c4d9d4a333be89835b0",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-20:drain",
+              "inc-20:budget"
+            ],
+            "claim": "The node cannot drain evict the ingest pod because doing so would violate the pod's disruption budget (PDB), which requires a minimum of 3 pods to be available."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [
+          "inc-20:budget"
+        ],
+        "initial_ids": [
+          "inc-20:drain",
+          "rb:k8s-pdb",
+          "rb:k8s-eviction",
+          "rb:k8s-probes",
+          "rb:k8s-debug-init"
+        ],
+        "final_ids": [
+          "inc-20:drain",
+          "rb:k8s-pdb",
+          "rb:k8s-eviction",
+          "rb:k8s-probes",
+          "rb:k8s-debug-init",
+          "inc-20:budget"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-20",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "69e85dcf058b462f928ce85303bb68be",
+      "run_id": "0378f3d9318f4ee4ba78bb0b872e8ade",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-20:drain",
+              "rb:k8s-pdb"
+            ],
+            "claim": "The node cannot drain evict the ingest pod because doing so would violate the pod's disruption budget."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-20:drain",
+          "rb:k8s-pdb",
+          "rb:k8s-eviction",
+          "rb:k8s-probes",
+          "rb:k8s-debug-init"
+        ],
+        "final_ids": [
+          "inc-20:drain",
+          "rb:k8s-pdb",
+          "rb:k8s-eviction",
+          "rb:k8s-probes",
+          "rb:k8s-debug-init"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-21",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "be4d0cdd8dea4b1da6fed8847ffcde28",
+      "run_id": "5103c027b0284621b44c72c507fe4283",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-21:drain",
+              "inc-21:budget"
+            ],
+            "claim": "The maintenance drain accepted the eviction of stream-a because it did not violate the disruption budget."
+          },
+          {
+            "citations": [
+              "inc-21:drain",
+              "inc-21:budget"
+            ],
+            "claim": "The maintenance drain rejected the eviction of stream-b because it violated the disruption budget after stream-a's eviction."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-21:drain",
+          "rb:k8s-pdb",
+          "rb:k8s-eviction",
+          "inc-21:budget",
+          "rb:k8s-debug-init"
+        ],
+        "final_ids": [
+          "inc-21:drain",
+          "rb:k8s-pdb",
+          "rb:k8s-eviction",
+          "inc-21:budget",
+          "rb:k8s-debug-init"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-21",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "07f929b6237f4e59a1db7e36e50d71e7",
+      "run_id": "13cef99d08244b55822ee1ca1d0adc50",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-21:drain",
+              "inc-21:budget"
+            ],
+            "claim": "The maintenance drain accepted the eviction of stream-a because it did not violate the disruption budget."
+          },
+          {
+            "citations": [
+              "inc-21:drain",
+              "inc-21:budget"
+            ],
+            "claim": "The maintenance drain rejected the eviction of stream-b because it violated the disruption budget after stream-a's eviction."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-21:drain",
+          "rb:k8s-pdb",
+          "rb:k8s-eviction",
+          "inc-21:budget",
+          "rb:k8s-debug-init"
+        ],
+        "final_ids": [
+          "inc-21:drain",
+          "rb:k8s-pdb",
+          "rb:k8s-eviction",
+          "inc-21:budget",
+          "rb:k8s-debug-init"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-22",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "defc7e5744034294955666af259c6287",
+      "run_id": "039935c5f87748d1a5b40c010100f313",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-22:status",
+              "rb:k8s-debug-init"
+            ],
+            "claim": "The app container is waiting because the Init Container has failed, causing the pod to be in a 'PodInitializing' state."
+          },
+          {
+            "citations": [
+              "inc-22:logs"
+            ],
+            "claim": "The Init Container failed due to a missing configuration file, which caused it to terminate with an exit code of 1."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [
+          "inc-22:logs"
+        ],
+        "initial_ids": [
+          "inc-22:status",
+          "rb:k8s-resources",
+          "rb:k8s-probes",
+          "rb:k8s-service",
+          "rb:k8s-debug-init"
+        ],
+        "final_ids": [
+          "inc-22:status",
+          "rb:k8s-resources",
+          "rb:k8s-probes",
+          "rb:k8s-service",
+          "rb:k8s-debug-init",
+          "inc-22:logs"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-22",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "2ecc2a78cc3347a3a9e53289ac7a1013",
+      "run_id": "e25a96bf4ab542cda828bc2635356dc6",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-22:status",
+              "rb:k8s-debug-init"
+            ],
+            "claim": "The app container is waiting because the Init Container has failed, causing the pod to be in a 'PodInitializing' state."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-22:status",
+          "rb:k8s-resources",
+          "rb:k8s-probes",
+          "rb:k8s-service",
+          "rb:k8s-debug-init"
+        ],
+        "final_ids": [
+          "inc-22:status",
+          "rb:k8s-resources",
+          "rb:k8s-probes",
+          "rb:k8s-service",
+          "rb:k8s-debug-init"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-23",
+      "mode": "fixed",
+      "answerable": true,
+      "session_id": "163bcae2f5c045e9b1deb9958b9316c7",
+      "run_id": "744a83f8d4ab4564b8b414788484d245",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [],
+        "missing_evidence": "The specific reason why the worker is in the 'PodInitializing' state and not progressing to readiness is unclear. Evidence regarding readiness probes or resource constraints is needed.",
+        "status": "insufficient"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-23:status",
+          "rb:k8s-dns",
+          "rb:k8s-probes",
+          "rb:k8s-pdb",
+          "rb:k8s-resources"
+        ],
+        "final_ids": [
+          "inc-23:status",
+          "rb:k8s-dns",
+          "rb:k8s-probes",
+          "rb:k8s-pdb",
+          "rb:k8s-resources"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-23",
+      "mode": "diagnostic",
+      "answerable": true,
+      "session_id": "43f35c7b19c0487cb1e9135de206a6b8",
+      "run_id": "a734b16dae304846bd9ccab42c8fe07b",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "inc-23:status",
+              "inc-23:logs"
+            ],
+            "claim": "The new search worker is in initialization because it is waiting for a successful response from the 'wait-for-schema' process, which is currently returning a 503 status."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [
+          "inc-23:logs"
+        ],
+        "initial_ids": [
+          "inc-23:status",
+          "rb:k8s-dns",
+          "rb:k8s-probes",
+          "rb:k8s-pdb",
+          "rb:k8s-resources"
+        ],
+        "final_ids": [
+          "inc-23:status",
+          "rb:k8s-dns",
+          "rb:k8s-probes",
+          "rb:k8s-pdb",
+          "rb:k8s-resources",
+          "inc-23:logs"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-24",
+      "mode": "diagnostic",
+      "answerable": false,
+      "session_id": "0f1fd3bb8a2540aaa69ed913e901265a",
+      "run_id": "9772b31d32a84c049ec763f3ad6032e3",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [],
+        "missing_evidence": "The logs from the 'prepare-data' Init Container are needed to determine whether it is failing due to input read issues or output directory write issues.",
+        "status": "insufficient"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "tool_started",
+          "tool_result",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-24:status",
+          "rb:k8s-dns",
+          "rb:k8s-resources",
+          "rb:k8s-debug-init",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-24:status",
+          "rb:k8s-dns",
+          "rb:k8s-resources",
+          "rb:k8s-debug-init",
+          "rb:k8s-probes"
+        ]
+      }
+    },
+    {
+      "case_id": "inc-24",
+      "mode": "fixed",
+      "answerable": false,
+      "session_id": "6d1a97b0273445768d1f2cefb841937e",
+      "run_id": "83fbffba2a4c4e909a75f8b725dbba11",
+      "run_status": "completed",
+      "answer": {
+        "conclusions": [],
+        "missing_evidence": "The logs from the 'prepare-data' Init Container are needed to determine whether it is failing due to input read issues or output directory write issues.",
+        "status": "insufficient"
+      },
+      "trace": {
+        "event_kinds": [
+          "run_started",
+          "incident_started",
+          "incident_evidence",
+          "model_started",
+          "model_response",
+          "run_finished"
+        ],
+        "added_ids": [],
+        "initial_ids": [
+          "inc-24:status",
+          "rb:k8s-dns",
+          "rb:k8s-resources",
+          "rb:k8s-debug-init",
+          "rb:k8s-probes"
+        ],
+        "final_ids": [
+          "inc-24:status",
+          "rb:k8s-dns",
+          "rb:k8s-resources",
+          "rb:k8s-debug-init",
+          "rb:k8s-probes"
+        ]
+      }
+    }
+  ],
+  "grades": {
+    "arms": {
+      "fixed": {
+        "runs": 16,
+        "answerable_runs": 12,
+        "completed_runs": 16,
+        "zero_conclusion_runs": 4,
+        "conclusions": 17,
+        "citation_support": {
+          "count": 11,
+          "denominator": 17,
+          "rate": 0.6470588235294118
+        },
+        "conclusion_correctness": {
+          "count": 14,
+          "denominator": 17,
+          "rate": 0.8235294117647058
+        },
+        "abstention_correctness": {
+          "count": 14,
+          "denominator": 16,
+          "rate": 0.875
+        },
+        "inappropriate_abstention": {
+          "count": 1,
+          "denominator": 12,
+          "rate": 0.08333333333333333
+        },
+        "failure": {
+          "count": 0,
+          "denominator": 16,
+          "rate": 0.0
+        },
+        "coverage": {
+          "count": 12,
+          "denominator": 16,
+          "rate": 0.75
+        },
+        "full_correct": {
+          "count": 10,
+          "denominator": 16,
+          "rate": 0.625
+        }
+      },
+      "diagnostic": {
+        "runs": 16,
+        "answerable_runs": 12,
+        "completed_runs": 16,
+        "zero_conclusion_runs": 3,
+        "conclusions": 19,
+        "citation_support": {
+          "count": 11,
+          "denominator": 19,
+          "rate": 0.5789473684210527
+        },
+        "conclusion_correctness": {
+          "count": 15,
+          "denominator": 19,
+          "rate": 0.7894736842105263
+        },
+        "abstention_correctness": {
+          "count": 15,
+          "denominator": 16,
+          "rate": 0.9375
+        },
+        "inappropriate_abstention": {
+          "count": 0,
+          "denominator": 12,
+          "rate": 0.0
+        },
+        "failure": {
+          "count": 0,
+          "denominator": 16,
+          "rate": 0.0
+        },
+        "coverage": {
+          "count": 13,
+          "denominator": 16,
+          "rate": 0.8125
+        },
+        "full_correct": {
+          "count": 10,
+          "denominator": 16,
+          "rate": 0.625
+        }
+      }
+    },
+    "runs": [
+      {
+        "case_id": "inc-09",
+        "mode": "fixed",
+        "run_id": "1ed6739c61fe486e88c903a0d60af7df",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "Calling ledger by its short name fails from the checkout namespace because there is no Service named ledger in that namespace.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The Service listing establishes that ledger exists in finance and not in checkout, but does not establish the failed lookup or how the unqualified name is scoped. The full record, including the lookup and DNS runbook, supports the diagnosis."
+          },
+          {
+            "index": 1,
+            "claim": "The DNS lookup for ledger from the checkout namespace fails because it does not resolve to any host in that namespace.",
+            "citation_supported": 1,
+            "conclusion_correct": 0,
+            "note": "The lookup transcript supports the literal observation: the checkout search suffix is tried for the short name, which returns no such host. Saying DNS fails because the name does not resolve restates the symptom rather than explaining the namespace mismatch."
+          }
+        ],
+        "note": "The first claim answers why but is undercited; the second accurately reports the symptom without explaining it."
+      },
+      {
+        "case_id": "inc-09",
+        "mode": "diagnostic",
+        "run_id": "fed70d95123f41aa810357b96d687c13",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "Calling ledger by its short name fails from the checkout namespace because there is no Service named ledger in that namespace.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The Service listing establishes that ledger exists in finance and not in checkout, but does not establish the failed lookup or how the unqualified name is scoped. The full record, including the lookup and DNS runbook, supports the diagnosis."
+          },
+          {
+            "index": 1,
+            "claim": "The DNS lookup for ledger from the checkout namespace fails because it does not resolve to any host in that namespace.",
+            "citation_supported": 1,
+            "conclusion_correct": 0,
+            "note": "The lookup transcript supports the literal observation: the checkout search suffix is tried for the short name, which returns no such host. Saying DNS fails because the name does not resolve restates the symptom rather than explaining the namespace mismatch."
+          }
+        ],
+        "note": "The first claim answers why but is undercited; the second accurately reports the symptom without explaining it."
+      },
+      {
+        "case_id": "inc-10",
+        "mode": "diagnostic",
+        "run_id": "89193ec8ceda437a9465a6ed9801569a",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The worker's new configuration broke service discovery for the cache service.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The config names payment instead of payments, and the affected worker gets NXDOMAIN only for that wrong name among the tested names. The correct name and control resolve. This identifies the config change as the cause of this lookup failure, not a cluster-wide DNS failure."
+          }
+        ],
+        "note": "The claim answers the either-or question without naming the typo explicitly or making claims about all cluster DNS behavior."
+      },
+      {
+        "case_id": "inc-10",
+        "mode": "fixed",
+        "run_id": "a75709fc56294c56bc33172da99ada41",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The worker's new configuration broke service discovery for the cache service.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The config names payment instead of payments, and the affected worker gets NXDOMAIN only for that wrong name among the tested names. The correct name and control resolve. This identifies the config change as the cause of this lookup failure, not a cluster-wide DNS failure."
+          }
+        ],
+        "note": "The claim answers the either-or question without naming the typo explicitly or making claims about all cluster DNS behavior."
+      },
+      {
+        "case_id": "inc-11",
+        "mode": "fixed",
+        "run_id": "f385652c6bdc496289cd0986789d29b0",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "insufficient",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [],
+        "note": "Abstention is appropriate, but the missing-evidence statement incorrectly says the caller namespace is unknown: it is shop. What is missing is the inventory Service namespace and short-name, qualified-name, and control lookup results from the affected pod."
+      },
+      {
+        "case_id": "inc-11",
+        "mode": "diagnostic",
+        "run_id": "6e10096c031147a9ad455dfbb56c7a83",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 0,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The lookup for inventory is failing because the caller is in the wrong namespace.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The client log identifies shop and reports a generic resolver failure. The DNS runbook explains how namespace scoping could cause a short-name failure, but neither passage identifies the Service namespace or rules out a resolver problem."
+          }
+        ],
+        "note": "The lookup failure is real, but the claim turns one possible explanation into a diagnosis."
+      },
+      {
+        "case_id": "inc-12",
+        "mode": "diagnostic",
+        "run_id": "b57c988f2b3a4da19ad711d9469f6c9e",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The quotes Service has no backends because it is configured to select pods with the label app=quotes-v1, but all available pods have the label app=quotes-v2.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The Service observation gives the v1 selector and empty EndpointSlice. The pod observation gives the Ready quotes pods' v2 labels and explicitly says no pod in trading has the v1 label. The mismatch explains the missing backends."
+          }
+        ],
+        "note": "Read 'all available pods' as the three quotes pods in the question, not every pod in trading."
+      },
+      {
+        "case_id": "inc-12",
+        "mode": "fixed",
+        "run_id": "2f4c59c886a64b8aaac4ad95c36c4d30",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The quotes Service has no backends because it is configured to select pods with the label app=quotes-v1, but all available pods have the label app=quotes-v2.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The Service observation gives the v1 selector and empty EndpointSlice. The pod observation gives the Ready quotes pods' v2 labels and explicitly says no pod in trading has the v1 label. The mismatch explains the missing backends."
+          }
+        ],
+        "note": "Read 'all available pods' as the three quotes pods in the question, not every pod in trading."
+      },
+      {
+        "case_id": "inc-13",
+        "mode": "fixed",
+        "run_id": "db69a96e7ed04d06b419e6996a408fd6",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "Calls through the profile Service fail because the Service is configured to route traffic to port 8081, but the profile pod only listens on port 8080.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The Service and EndpointSlice target the right pod on 8081. The same-client checks show refusal both through the Service and directly on 8081, success on 8080, and app logs confirming that it listens only on 8080."
+          }
+        ],
+        "note": "The targetPort/listener mismatch explains both paths."
+      },
+      {
+        "case_id": "inc-13",
+        "mode": "diagnostic",
+        "run_id": "3bd92e6ef61946b49854578ac07319b1",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "Calls through the profile Service fail because the Service is configured to route traffic to port 8081, but the profile pod only listens on port 8080.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The Service and EndpointSlice target the right pod on 8081. The same-client checks show refusal both through the Service and directly on 8081, success on 8080, and app logs confirming that it listens only on 8080."
+          }
+        ],
+        "note": "The targetPort/listener mismatch explains both paths."
+      },
+      {
+        "case_id": "inc-14",
+        "mode": "diagnostic",
+        "run_id": "5c1b163d4b7c48bb8b2106a4eac5c78f",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "insufficient",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [],
+        "note": "Abstention is appropriate. The requested selector and port configuration are relevant but should be paired with actual EndpointSlice contents and the pods' listener port to distinguish the two explanations."
+      },
+      {
+        "case_id": "inc-14",
+        "mode": "fixed",
+        "run_id": "2795ca0ad903419f8ad6b4a1f22beee5",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 0,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "Search is unreachable because its Service selects no pods.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The incident records ClusterIP resolution, HTTP timeouts, and Ready pods. The Service runbook describes checking EndpointSlices, selectors, and targetPort, but provides no case-specific result establishing that search selects no pods."
+          }
+        ],
+        "note": "The timeout is real; the asserted empty selection is not established, and a wrong port remains possible."
+      },
+      {
+        "case_id": "inc-15",
+        "mode": "fixed",
+        "run_id": "d986624be7e54087929f284569983fdc",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "archive-0 is unable to schedule because it has unbound immediate PersistentVolumeClaims.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The scheduler explicitly reports that archive-0 has unbound immediate PersistentVolumeClaims. This directly identifies the scheduling blocker."
+          },
+          {
+            "index": 1,
+            "claim": "The PersistentVolumeClaim for archive-data is in a Pending state due to the storage class 'archive-ssd' not being found.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The archive-data observation gives the Pending state, the requested class, and the event that the class was not found. This directly identifies the underlying provisioning blocker without claiming that static binding is impossible."
+          }
+        ],
+        "note": "The claims explain both the immediate scheduling blocker and why the requested class is not provisioning storage."
+      },
+      {
+        "case_id": "inc-15",
+        "mode": "diagnostic",
+        "run_id": "158d5b175fc84a26a9b6e64f5ba5344e",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "archive-0 is unable to schedule because it has unbound immediate PersistentVolumeClaims.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The scheduler explicitly reports that archive-0 has unbound immediate PersistentVolumeClaims. This directly identifies the scheduling blocker."
+          },
+          {
+            "index": 1,
+            "claim": "The PersistentVolumeClaim for archive-data is in a Pending state due to the storage class 'archive-ssd' not being found.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The archive-data observation gives the Pending state, the requested class, and the event that the class was not found. This directly identifies the underlying provisioning blocker without claiming that static binding is impossible."
+          }
+        ],
+        "note": "The claims explain both the immediate scheduling blocker and why the requested class is not provisioning storage."
+      },
+      {
+        "case_id": "inc-16",
+        "mode": "diagnostic",
+        "run_id": "3b113c2b544d499496f1e7c1ce3ae727",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The importer claim cannot bind to the available manual volume because the storage class name is empty, which disables dynamic provisioning.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The PVC has an empty class, and the runbook says that disables dynamic provisioning. It does not prevent binding to an existing compatible manual PV; the full record shows that both classes are empty and the PV is too small."
+          },
+          {
+            "index": 1,
+            "claim": "The available volume has a capacity of 20Gi, which does not match the 50Gi requested by the importer claim.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The volume citation supplies 20Gi and the runbook supplies the minimum-size rule, not the importer's 50Gi request. That request appears only in the uncited claim observation. The full record confirms that 20Gi is insufficient for the named PV to bind."
+          }
+        ],
+        "note": "The capacity comparison answers the question, but omits a material citation. The separate empty-class explanation confuses provisioning with static binding."
+      },
+      {
+        "case_id": "inc-16",
+        "mode": "fixed",
+        "run_id": "0a44d4f4437c478cae159e8a7d785caf",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The importer claim cannot bind to the available manual volume because the storage class name is empty, which disables dynamic provisioning.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The PVC has an empty class, and the runbook says that disables dynamic provisioning. It does not prevent binding to an existing compatible manual PV; the full record shows that both classes are empty and the PV is too small."
+          },
+          {
+            "index": 1,
+            "claim": "The available volume has a capacity of 20Gi, which does not match the 50Gi requested by the importer claim.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The volume citation supplies 20Gi and the runbook supplies the minimum-size rule, not the importer's 50Gi request. That request appears only in the uncited claim observation. The full record confirms that 20Gi is insufficient for the named PV to bind."
+          }
+        ],
+        "note": "The capacity comparison answers the question, but omits a material citation. The separate empty-class explanation confuses provisioning with static binding."
+      },
+      {
+        "case_id": "inc-17",
+        "mode": "fixed",
+        "run_id": "7362034765174f608baa5b6067144699",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "insufficient",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [],
+        "note": "Appropriate abstention: Pending without a volume does not distinguish deferred binding from failure. The StorageClass binding mode is relevant; PVC events and consumer scheduling status are more diagnostic than whether a matching PV exists, since a volume may be provisioned dynamically."
+      },
+      {
+        "case_id": "inc-17",
+        "mode": "diagnostic",
+        "run_id": "7cb90eb0bc0c4d8baf6ac2f98f306f50",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "insufficient",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [],
+        "note": "Appropriate abstention: Pending alone cannot decide between the two causes. Asking for StorageClass configuration is relevant, but matching-PV inventory is not decisive; ask specifically for the binding mode, PVC events, and consumer scheduling status."
+      },
+      {
+        "case_id": "inc-18",
+        "mode": "diagnostic",
+        "run_id": "5cb04f0c891c4b579b0f178bc5952278",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The queue worker's HPA shows unknown CPU utilization because the worker pod does not have a CPU request defined.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The HPA reports the worker container's missing CPU request despite available samples; the live spec confirms it, and the runbook explains why a utilization target needs that request as its denominator."
+          }
+        ],
+        "note": "Answers why CPU samples are not enough to compute utilization."
+      },
+      {
+        "case_id": "inc-18",
+        "mode": "fixed",
+        "run_id": "3d772346528c45e5b1f531ebc320f200",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The queue worker's HPA shows unknown CPU utilization because the worker pod does not have a CPU request defined.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The HPA error and live spec identify the missing worker-container CPU request; the runbook ties that omission to undefined utilization even when usage samples exist."
+          }
+        ],
+        "note": "Same diagnosis and evidence as the diagnostic arm."
+      },
+      {
+        "case_id": "inc-19",
+        "mode": "fixed",
+        "run_id": "302908befb584a4a845dc6cbf9fa06a7",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The addition of the log sidecar caused the target utilization for memory to become unknown because the sidecar did not have a memory request set.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The HPA passage shows timing and available samples, and the runbook explains utilization, but neither says the new sidecar lacks a memory request. The uncited live container specs supply that fact and complete the diagnosis."
+          },
+          {
+            "index": 1,
+            "claim": "The Horizontal Pod Autoscaler (HPA) requires all containers in a pod to have relevant resource requests set to calculate utilization.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "In the question's pod-wide Resource AverageUtilization context, the runbook explains that utilization is relative to container requests and calls for memory requests for memory utilization; raw-value targets are not at issue."
+          }
+        ],
+        "note": "Correct diagnosis, but the causal claim omits the incident passage that identifies the missing sidecar request."
+      },
+      {
+        "case_id": "inc-19",
+        "mode": "diagnostic",
+        "run_id": "0e974ad379824d8f83746c8afd4cbc97",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The addition of the log sidecar caused the target utilization for memory to become unknown because the sidecar did not have a memory request specified.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The cited observations establish the memory-utilization target, the change after rollout, and the sidecar's missing memory request, but contain no HPA error or rule tying that omission to the unknown value. The runbook supplies that causal link in the full evidence."
+          },
+          {
+            "index": 1,
+            "claim": "The Horizontal Pod Autoscaler (HPA) requires all containers in a pod to have relevant resource requests set to calculate utilization; the absence of a memory request for the sidecar led to the inability to define memory utilization.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The runbook supports the general request requirement for pod-wide utilization, but it cannot establish that this sidecar lacked a memory request or that this omission explains this incident. The full evidence supports both parts."
+          }
+        ],
+        "note": "The two claims cite complementary evidence, but each is graded on its own citations; neither cites both the incident facts and the rule needed for its causal assertion."
+      },
+      {
+        "case_id": "inc-20",
+        "mode": "diagnostic",
+        "run_id": "8ab2edbc3b404c4d9d4a333be89835b0",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The node cannot drain evict the ingest pod because doing so would violate the pod's disruption budget (PDB), which requires a minimum of 3 pods to be available.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The eviction API explicitly rejects the drain attempt on PDB grounds, and the matching budget has minAvailable=3, exactly three healthy replicas, and zero disruptions allowed."
+          }
+        ],
+        "note": "Identifies the PDB and its availability floor, although the answer does not explicitly spell out that the healthy count is exactly at that floor."
+      },
+      {
+        "case_id": "inc-20",
+        "mode": "fixed",
+        "run_id": "0378f3d9318f4ee4ba78bb0b872e8ade",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The node cannot drain evict the ingest pod because doing so would violate the pod's disruption budget.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The drain passage explicitly confirms the PDB rejection, and the runbook explains why a PDB can block a drain. The claim gives the correct immediate cause without asserting the budget's specific numbers."
+          }
+        ],
+        "note": "Correct but less explanatory: it does not say why a healthy service has no disruption headroom (three healthy replicas against minAvailable=3)."
+      },
+      {
+        "case_id": "inc-21",
+        "mode": "fixed",
+        "run_id": "5103c027b0284621b44c72c507fe4283",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The maintenance drain accepted the eviction of stream-a because it did not violate the disruption budget.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The drain accepted stream-a, and the matching budget had one disruption available before that eviction."
+          },
+          {
+            "index": 1,
+            "claim": "The maintenance drain rejected the eviction of stream-b because it violated the disruption budget after stream-a's eviction.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The API rejected stream-b for a budget violation; the budget shows that stream-a used the only available disruption and that the allowance stayed at zero while the replacement was not Ready."
+          }
+        ],
+        "note": "Together the claims correctly distinguish the first permitted eviction from the second rejection, though they leave the budget counters and replacement readiness implicit."
+      },
+      {
+        "case_id": "inc-21",
+        "mode": "diagnostic",
+        "run_id": "13cef99d08244b55822ee1ca1d0adc50",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The maintenance drain accepted the eviction of stream-a because it did not violate the disruption budget.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The drain accepted stream-a when the matching budget still allowed one disruption."
+          },
+          {
+            "index": 1,
+            "claim": "The maintenance drain rejected the eviction of stream-b because it violated the disruption budget after stream-a's eviction.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The API rejected stream-b for a budget violation after stream-a consumed the single allowance; the budget stayed at zero while the replacement was not Ready."
+          }
+        ],
+        "note": "Same correct two-step explanation as fixed, with the budget counters and replacement readiness left implicit."
+      },
+      {
+        "case_id": "inc-22",
+        "mode": "diagnostic",
+        "run_id": "039935c5f87748d1a5b40c010100f313",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The app container is waiting because the Init Container has failed, causing the pod to be in a 'PodInitializing' state.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The passages establish that failed init blocks the app. They report the pod as Init:CrashLoopBackOff and PodInitializing as the app container's waiting reason, not the pod's state as claimed. The immediate diagnosis remains correct."
+          },
+          {
+            "index": 1,
+            "claim": "The Init Container failed due to a missing configuration file, which caused it to terminate with an exit code of 1.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The previous prepare-config log directly reports that /config/region.yaml was missing and that the process was exiting with status 1. This is the underlying init failure blocking the app."
+          }
+        ],
+        "note": "Names both the immediate blocker and the missing config file. The first claim conflates the pod status with the app container's waiting reason."
+      },
+      {
+        "case_id": "inc-22",
+        "mode": "fixed",
+        "run_id": "e25a96bf4ab542cda828bc2635356dc6",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The app container is waiting because the Init Container has failed, causing the pod to be in a 'PodInitializing' state.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The cited status and runbook support repeated init failure as the immediate blocker. PodInitializing is the app container's waiting reason, not the reported pod status, Init:CrashLoopBackOff, so the exact wording is not fully supported."
+          }
+        ],
+        "note": "Correct immediate diagnosis despite the status-label mix-up; does not identify the missing configuration file."
+      },
+      {
+        "case_id": "inc-23",
+        "mode": "fixed",
+        "run_id": "744a83f8d4ab4564b8b414788484d245",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "insufficient",
+        "failed": false,
+        "abstention_correct": 0,
+        "inappropriate_abstention": 1,
+        "full_correct": 0,
+        "claims": [],
+        "note": "Abstention is not appropriate. The status and logs already show a running init container retrying the schema endpoint until it gets HTTP 200. Readiness-probe or resource-constraint evidence is not needed to identify that blocker; why the endpoint returns 503 is a separate unanswered question."
+      },
+      {
+        "case_id": "inc-23",
+        "mode": "diagnostic",
+        "run_id": "a734b16dae304846bd9ccab42c8fe07b",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The new search worker is in initialization because it is waiting for a successful response from the 'wait-for-schema' process, which is currently returning a 503 status.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The status shows wait-for-schema still running, and its log shows it receiving 503 from http://schema:8080/ready. The claim instead says wait-for-schema returns 503 and that the worker awaits its response. The worker is blocked on init completion; the init container is the HTTP client waiting for 200."
+          }
+        ],
+        "note": "Recognizes the relevant init step and 503, but reverses who returns the response and who waits for it, materially misdescribing the blocker."
+      },
+      {
+        "case_id": "inc-24",
+        "mode": "diagnostic",
+        "run_id": "9772b31d32a84c049ec763f3ad6032e3",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "insufficient",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [],
+        "note": "Appropriate abstention and evidence request: the generic exit code and restart count establish repeated failure, not which operation failed. Logs from a failed attempt or a specific termination message could distinguish input read from output write failure."
+      },
+      {
+        "case_id": "inc-24",
+        "mode": "fixed",
+        "run_id": "83fbffba2a4c4e909a75f8b725dbba11",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "insufficient",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [],
+        "note": "Appropriate abstention. The prior prepare-data attempt's logs are the right next evidence; a specific termination message could also resolve the ambiguity left by exit code 1."
+      }
+    ]
+  }
+}

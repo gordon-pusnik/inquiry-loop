@@ -15,12 +15,14 @@ The corpus contains 10 [public Kubernetes runbook excerpts](incident_runbooks.js
 
 ## Milestone 2: Grade citations, conclusions, and abstentions
 
-**Status: Not started**
+**Status: Complete**
 
 ### Acceptance criteria
 
-- [ ] Require an evidence citation for each diagnostic conclusion. Score citation support, conclusion correctness, and abstention separately.
-- [ ] Compare a fixed workflow with a bounded, read-only diagnostic step. Use existing traces to inspect any gains and failures.
+- [x] Require an evidence citation for each diagnostic conclusion. Score citation support, conclusion correctness, and abstention separately.
+- [x] Compare a fixed workflow with a bounded, read-only diagnostic step. Use existing traces to inspect any gains and failures.
+
+Both workflows completed all 16 held-out cases. The bounded lookup added evidence in three cases, but both arms had 10/16 fully correct runs. See the [trace analysis](INCIDENT_RUNBOOK_PLAN.md#milestone-2-results), [scores and trace summaries](incident_diagnosis_report.json), and [semantic review notes](incident_diagnosis_reviews.json).
 
 ## Milestone 3: Benchmark local MLX and hosted inference
 
