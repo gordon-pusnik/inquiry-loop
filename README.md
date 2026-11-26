@@ -10,13 +10,13 @@ Inquiry Loop is a Python command-line agent for experimenting with local and hos
 
 ## Overview
 
-The CLI offers two workflows. The **general agent** follows a propose → execute → observe loop for tasks such as reading files, searching source code, and looking up web sources. **Research mode** performs one Tavily search, asks TypeSafe Jev whether the excerpts cover the question, and has the selected LLM write a cited answer. Both workflows share the model adapters and session store.
+The CLI offers two workflows. The **general agent** follows a propose → execute → observe loop for tasks such as reading files, searching source code, and looking up web sources. **Research mode** searches Tavily and asks the selected LLM for a cited answer. TypeSafe Jev assesses evidence coverage in shadow mode by default; opt-in enforcement can use that judgment to run one focused follow-up search. Both workflows share the model adapters and session store.
 
 ## Key Features
 
 - **Interchangeable model backends.** Run OpenAI, MLX-LM, Strata, or experimental AirLLM through the same CLI. A scripted stub demonstrates the tool loop offline.
 - **File and web tools.** List directories, inspect paginated UTF-8 files, find literal matches, write files, run allowlisted commands, or search the web.
-- **Cited research.** Use up to five Tavily excerpts, validate source references against the retrieved links, and display Jev’s evidence judgment alongside the answer.
+- **Cited research.** Validate citation IDs against the retrieved links and display Jev’s evidence judgments. Enforcement can add up to five excerpts from one additional search.
 - **Interactive sessions.** Keep one model loaded, switch into research mode with `/research`, and resume completed conversations from SQLite.
 - **Run metrics and evaluation.** Inspect elapsed time, model-call counts, token throughput, and Jev judgments. Replay frozen incident cases to compare retrieval, diagnosis quality, and local versus hosted inference.
 
@@ -34,18 +34,20 @@ flowchart TD
     Agent <--> Models["Model adapters: OpenAI, MLX-LM, Strata, AirLLM"]
     Agent -->|Final answer| Output["Terminal: answer, evidence judgment when available, and timing"]
 
-    Research -->|Search once| Tavily["Tavily Search API"]
+    Research -->|Initial search| Tavily["Tavily Search API"]
     Tavily -->|Up to five usable excerpts| Evidence["Question and source excerpts"]
     Evidence --> Synthesis["Cited answer synthesis"]
     Synthesis <--> Models
     Synthesis -->|Validated citation IDs| Output
-    Evidence -.->|Shadow check| Jev["TypeSafe Jev"]
+    Evidence -.->|Coverage check| Jev["TypeSafe Jev"]
     Jev -.->|Evidence judgment| Output
+    Jev -.->|Enforce mode: low coverage| Followup["Plan one focused follow-up"]
+    Followup -->|If valid and distinct| Tavily
 
     CLI -.->|Run events and completed history| SQLite[("Local SQLite session store")]
 ```
 
-The Python application controls tool execution and the general agent’s response budget. In research mode, Jev judges the excerpts before synthesis and its result is displayed and traced. The workflow performs one search regardless of the judgment. Tavily and TypeSafe are called through their HTTP APIs, not MCP.
+The Python application controls tool execution and request budgets. Research uses one Tavily search in `off` and `shadow` modes; in `enforce` mode Python can authorize one additional search, never a loop. Tavily and TypeSafe are called through their HTTP APIs, not MCP.
 
 ## Repository Layout
 
@@ -119,7 +121,18 @@ You> /research
 You> What is the capital of Canada?
 ```
 
-Jev shadow checking runs by default. A line such as `Jev evidence check (shadow) — supported (72%, jev-1.14.0)` appears below the answer and before the timing summary. The percentage is the probability Jev assigned to the `supported` evidence label. The LLM’s final answer is generated after this check. For a one-shot comparison that skips Jev, use `--research --evidence-check off`.
+Jev shadow checking runs by default. A line such as `Jev evidence check (shadow) — supported (72%, jev-1.14.0)` appears below the answer. The percentage is Jev’s probability for the evidence-coverage label, not the probability that the answer is correct. Use `--research --evidence-check off` or interactive `/research off` to skip Jev.
+
+To opt into one focused follow-up search:
+
+```bash
+python3 agent.py --research --evidence-check enforce --evidence-threshold 0.60 \
+  'Which gpt-oss models were announced, and when did they become available?'
+```
+
+In an interactive session, use `/research enforce` or `/research enforce 0.65`. The provisional cutoff is `0.60` unless overridden. Enforcement considers a follow-up when Jev returns `partial`, `insufficient`, `supported` below the cutoff, or when Tavily returns no usable excerpts. The model proposes one query targeting the evidence gap. Python rejects invalid or repeated queries, merges up to five new usable excerpts without duplicating URLs, and rechecks only if usable evidence was added. The CLI shows why it searched again and any available before-and-after judgments. The synthesis prompt asks the model to separate supported findings from what remains unresolved.
+
+A Jev error alone never triggers a search; coverage is reported as unassessed. An unsuccessful follow-up leaves the initial excerpts available. Enforcement is capped at two searches, two Jev checks, and two LLM calls. With `--max-steps 1`, it reserves the single model call for the answer. Enforcement is not yet validated to improve citation support on held-out questions; see the [Jev research plan](JEV_RESEARCH_PLAN.md).
 
 ### Interactive Sessions
 
@@ -127,7 +140,7 @@ Use the Left and Right arrow keys to move within a question before submitting it
 
 | Command | Behavior |
 | --- | --- |
-| `/research` | Switch to research with Jev in the current session. |
+| `/research [off\|shadow\|enforce [threshold]]` | Switch to research in the current session. With no argument, use `shadow`. |
 | `/new` | Start a clean session in the general agent mode while keeping the model loaded. |
 | `/sessions` | List saved sessions and backend identities. |
 | `/resume ID` | Restore a completed conversation checkpoint using a full session ID or unique prefix. |
@@ -156,7 +169,7 @@ For Strata, set `STRATA_BASE_URL` and `STRATA_MODEL` in `.env`, or pass `--base-
 
 ```bash
 python3 -m unittest discover -v
-python3 -m unittest test_research test_search test_benchmark_search -v
+python3 -m unittest test_research test_research_enforcement test_search test_benchmark_search -v
 ```
 
 The regression suite uses mocks for provider calls and model generation. The optional MLX chat-template check uses Jinja2 (`python3 -m pip install Jinja2`) and a cached Qwen3-4B tokenizer. The project has been exercised with live OpenAI, MLX, Strata, Tavily, and TypeSafe integrations. AirLLM remains experimental.

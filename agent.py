@@ -436,14 +436,30 @@ def create_model(llm: str = "openai", *, stub: bool = False, model_path=None,
     raise ValueError(f"Unknown LLM backend: {llm}")
 
 
-def _shadow_research(on_evidence):
-    from jev_eng import JevClient
+def _evidence_threshold(value):
+    try:
+        cutoff = float(value)
+    except ValueError:
+        raise ValueError('Evidence threshold must be greater than 0 and at most 1.') from None
+    if not 0 < cutoff <= 1:
+        raise ValueError('Evidence threshold must be greater than 0 and at most 1.')
+    return cutoff
+
+
+def _research_workflow(on_evidence, mode, cutoff=None):
     from research import run_research
+
+    if mode == 'off':
+        return partial(run_research, verbose=True)
+
+    from jev_eng import JevClient
 
     judge = JevClient()
     if not judge.configured:
-        print("Jev shadow check needs TYPESAFE_API_KEY. Continuing with baseline research.", file=sys.stderr)
-    return partial(run_research, judge=judge.judge, on_evidence=on_evidence, verbose=True)
+        print(f"Jev {mode} check needs TYPESAFE_API_KEY. Evidence coverage cannot be assessed.", file=sys.stderr)
+    options = {} if cutoff is None else {'supported_cutoff': cutoff}
+    return partial(run_research, judge=judge.judge, on_evidence=on_evidence, verbose=True,
+                   enforce=mode == 'enforce', **options)
 
 
 def _print_run_output(answer, evidence_checks, metrics, elapsed, backend):
@@ -485,13 +501,18 @@ def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS
                 command, *arguments = request.split()
                 try:
                     if command == '/help' and not arguments:
-                        print('/research: research with Jev in this session; /new: clean conversation in default mode; /sessions: list saved sessions; /resume ID: restore a completed checkpoint; /stats [ID]: run outcomes and timings; /quit: exit.')
+                        print('/research [off|shadow|enforce [threshold]]: switch to research; /new: clean conversation in default mode; /sessions: list saved sessions; /resume ID: restore a completed checkpoint; /stats [ID]: run outcomes and timings; /quit: exit.')
                         continue
-                    if command == '/research' and not arguments:
+                    if command == '/research':
                         if isinstance(model, StubModel):
                             raise ValueError('/research requires a real synthesis backend.')
-                        run_fn = _shadow_research(evidence_checks.append)
-                        print('Research mode with Jev enabled. Enter a standalone public question.')
+                        mode, *threshold = arguments or ['shadow']
+                        if mode not in ('off', 'shadow', 'enforce') or (threshold and
+                                (mode != 'enforce' or len(threshold) != 1)):
+                            raise ValueError('Usage: /research [off|shadow|enforce [threshold]]')
+                        cutoff = _evidence_threshold(threshold[0]) if threshold else None
+                        run_fn = _research_workflow(evidence_checks.append, mode, cutoff)
+                        print(f'Research mode (evidence check: {mode}). Enter a standalone public question.')
                         continue
                     if command == '/new' and not arguments:
                         if runner is not None:
@@ -563,8 +584,10 @@ def main(argv=None) -> int:
     parser.add_argument("--no-trace", action="store_true", help="Disable persistence and keep tasks independent")
     parser.add_argument("--resume", help="Resume a saved session ID or unique prefix without replaying tools")
     parser.add_argument("--research", action="store_true", help="Run one public research question using Tavily and Jev")
-    parser.add_argument("--evidence-check", choices=("off", "shadow"), default=None,
-                        help="Research only. Default shadow sends the question and public excerpts to hosted TypeSafe")
+    parser.add_argument("--evidence-check", choices=("off", "shadow", "enforce"), default=None,
+                        help="Research only. Shadow (default) sends public evidence to TypeSafe; enforce can search again")
+    parser.add_argument("--evidence-threshold", metavar="PROBABILITY",
+                        help="Enforce only. Follow up below this supported probability (default: 0.60)")
     parser.add_argument("request", nargs="*", help="Task for the agent")
     args = parser.parse_args(argv)
     if args.resume and args.no_trace:
@@ -583,6 +606,14 @@ def main(argv=None) -> int:
         parser.error("Use --model or --model-path for MLX, not both")
     if args.evidence_check is not None and not args.research:
         parser.error("--evidence-check requires --research")
+    cutoff = None
+    if args.evidence_threshold is not None:
+        if not args.research or args.evidence_check != 'enforce':
+            parser.error('--evidence-threshold requires --research --evidence-check enforce')
+        try:
+            cutoff = _evidence_threshold(args.evidence_threshold)
+        except ValueError as exc:
+            parser.error(str(exc))
     if args.research and (not args.request or args.interactive or args.resume or args.stub):
         parser.error("--research requires a standalone question and a real synthesis backend")
     model = None
@@ -593,12 +624,10 @@ def main(argv=None) -> int:
     try:
         run_fn = run_agent
         if args.research:
-            from research import research_question, run_research
+            from research import research_question
 
             research_question(" ".join(args.request))
-            run_fn = partial(run_research, verbose=True)
-            if args.evidence_check != "off":
-                run_fn = _shadow_research(evidence_checks.append)
+            run_fn = _research_workflow(evidence_checks.append, args.evidence_check or 'shadow', cutoff)
         options = {"stub": args.stub, "model_path": args.model_path}
         if args.llm == "strata":
             options.update(base_url=args.base_url, model=args.model)
