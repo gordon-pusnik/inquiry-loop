@@ -1,6 +1,8 @@
 import contextlib
 import copy
 import io
+from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
@@ -37,6 +39,29 @@ class InteractiveTests(unittest.TestCase):
         self.assertIn("mlx processed request in 2.00 seconds, tokens per second = 5.00", text)
         self.assertIn("mlx processed request in 3.00 seconds, tokens per second = 5.00", text)
         self.assertEqual(text.count("processed request"), 2)
+
+    def test_web_search_is_printed_before_execution(self):
+        model = ReusableModel()
+        call = {"id": "search", "function": {"name": "search_web", "arguments": '{"query":"test query"}'}}
+        model.respond = Mock(side_effect=[([call], ""), ([], "Search answer.")])
+        output = io.StringIO()
+        step = "[step 1] search_web({'query': 'test query'})"
+
+        observed = []
+
+        def search(query):
+            observed.append((query, step in output.getvalue()))
+            return {"results": []}
+
+        with tempfile.TemporaryDirectory() as directory, \
+                patch("agent.create_model", return_value=model), \
+                patch.dict(agent.TOOLS, {"search_web": search}), \
+                patch("builtins.input", side_effect=["search for test query", "/quit"]), \
+                contextlib.redirect_stdout(output):
+            self.assertEqual(agent.main(["--interactive", "--db", str(Path(directory) / "trace.sqlite3")]), 0)
+        self.assertEqual(observed, [("test query", True)])
+        self.assertEqual(output.getvalue().count(step), 1)
+        self.assertIn("Search answer.", output.getvalue())
 
     def test_optional_initial_task_runs_before_input(self):
         model = ReusableModel()

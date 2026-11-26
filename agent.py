@@ -365,19 +365,21 @@ def run_agent(request: str, model, max_steps: int = MAX_STEPS, verbose: bool = T
             except json.JSONDecodeError as exc:
                 args, observation = {}, {"error": f"invalid tool arguments: {exc}"}
             else:
-                if call["name"] not in TOOLS:
-                    args, observation = {}, {"error": f"unknown tool: {call['name']}"}
-                else:
-                    try:
-                        observation = TOOLS[call["name"]](**args)
-                    except Exception as exc:  # a failed tool is an observation, not a crash
-                        observation = {"error": f"{type(exc).__name__}: {exc}"}
+                observation = None
+
+            if call["name"] not in TOOLS and observation is None:
+                args, observation = {}, {"error": f"unknown tool: {call['name']}"}
+            if verbose:
+                print(f"[step {step + 1}] {call['name']}({args})", flush=True)
+            if observation is None:
+                try:
+                    observation = TOOLS[call["name"]](**args)
+                except Exception as exc:  # a failed tool is an observation, not a crash
+                    observation = {"error": f"{type(exc).__name__}: {exc}"}
 
             context.emit('tool_result', {'step': step + 1, 'call_id': call['id'],
                                          'name': call['name'], 'observation': observation,
                                          'elapsed': time.monotonic() - tool_started})
-            if verbose:
-                print(f"[step {step + 1}] {call['name']}({args})")
             failed = isinstance(observation, dict) and "error" in observation
             consecutive_errors = consecutive_errors + 1 if failed else 0
             if failed and verbose:
@@ -441,7 +443,7 @@ def _shadow_research(on_evidence):
     judge = JevClient()
     if not judge.configured:
         print("Jev shadow check needs TYPESAFE_API_KEY. Continuing with baseline research.", file=sys.stderr)
-    return partial(run_research, judge=judge.judge, on_evidence=on_evidence)
+    return partial(run_research, judge=judge.judge, on_evidence=on_evidence, verbose=True)
 
 
 def _print_run_output(answer, evidence_checks, metrics, elapsed, backend):
@@ -594,7 +596,7 @@ def main(argv=None) -> int:
             from research import research_question, run_research
 
             research_question(" ".join(args.request))
-            run_fn = run_research
+            run_fn = partial(run_research, verbose=True)
             if args.evidence_check != "off":
                 run_fn = _shadow_research(evidence_checks.append)
         options = {"stub": args.stub, "model_path": args.model_path}

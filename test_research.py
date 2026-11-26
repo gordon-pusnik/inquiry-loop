@@ -104,6 +104,8 @@ class ResearchTests(unittest.TestCase):
         for console in (output, no_trace_output):
             text = console.getvalue()
             self.assertIn("Sources\n\n", text)
+            self.assertEqual(text.count("[step 1] search_web("), 1)
+            self.assertLess(text.index("[step 1] search_web("), text.index("Sources"))
             self.assertIn("Jev evidence check (shadow) — partial (73%, jev-example)", text)
             self.assertLess(text.index("Sources"), text.index("Jev evidence check"))
 
@@ -114,7 +116,14 @@ class ResearchTests(unittest.TestCase):
         judge = Mock()
         judge.judge.return_value = {"status": "ok", "label": "partial", "model": "jev-example",
                                    "probabilities": {"supported": 0.26, "partial": 0.73, "insufficient": 0.01}}
-        search = Mock(return_value=OBSERVATION)
+        progress = []
+
+        def verify_progress(query, **kwargs):
+            arguments = {"query": query}
+            progress.append(f"[step 1] search_web({arguments})" in output.getvalue())
+            return OBSERVATION
+
+        search = Mock(side_effect=verify_progress)
         real_runner = research.run_research
         commands = ["private prior turn", "/research", QUESTION, "What was announced?", "/new", "fresh task", "/quit"]
         with tempfile.TemporaryDirectory() as directory:
@@ -138,6 +147,8 @@ class ResearchTests(unittest.TestCase):
             finally:
                 store.close()
         self.assertEqual(search.call_count, 2)
+        self.assertEqual(progress, [True, True])
+        self.assertEqual(output.getvalue().count("[step 1] search_web("), 2)
         self.assertEqual(judge.judge.call_count, 2)
         self.assertNotIn("private prior turn", str(judge.judge.call_args_list))
         self.assertNotIn("private prior turn", str(model.respond.call_args_list[1:]))

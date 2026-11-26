@@ -65,7 +65,7 @@ def _cited_answer(text, sources):
 
 
 def run_research(request, model, *, max_steps=1, metrics=None, context=None,
-                 judge=None, on_evidence=None, search_fn=search, as_of=None):
+                 judge=None, on_evidence=None, search_fn=search, as_of=None, verbose=False):
     question = research_question(request)
     context = context if context is not None else RunContext()
     as_of = as_of or date.today().isoformat()
@@ -74,6 +74,8 @@ def run_research(request, model, *, max_steps=1, metrics=None, context=None,
 
     call = {"id": "research-search-1", "name": "search_web", "arguments": {"query": question}}
     context.emit("tool_started", {"step": 1, "call": call})
+    if verbose:
+        print(f"[step 1] search_web({call['arguments']})", flush=True)
     started = time.monotonic()
     observation = search_fn(question, max_results=SOURCE_LIMIT, provider="tavily")
     context.emit("tool_result", {"step": 1, "call_id": call["id"], "name": call["name"],
