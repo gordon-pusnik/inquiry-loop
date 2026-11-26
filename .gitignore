@@ -7,3 +7,7 @@ __pycache__/
 
 # Local session transcripts and SQLite traces
 .agent/
+
+# Milestones, etc.
+PRODUCT_MILESTONES.md
+docs/plans/
