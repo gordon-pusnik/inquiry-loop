@@ -6,7 +6,7 @@
 ![TypeSafe Jev](https://img.shields.io/badge/Evidence%20Checks-Jev-purple)
 ![SQLite](https://img.shields.io/badge/Run%20Tracing-SQLite-blue)
 
-Inquiry Loop is a Python command-line agent for experimenting with local and cloud language models, tool calling, and evidence-based web research. It saves model responses, tool calls, and research judgments to SQLite so you can inspect how a run reached its answer.
+Inquiry Loop is a Python command-line agent for experimenting with local and hosted language models, tool calling, and cited web research. It records model responses, tool calls, and evidence judgments in SQLite. A separate [incident benchmark suite](#incident-runbook-benchmarks) evaluates cited diagnoses, abstention, and inference performance on public Kubernetes runbooks and synthetic incidents.
 
 ## Overview
 
@@ -18,7 +18,7 @@ The CLI offers two workflows. The **general agent** follows a propose → execut
 - **File and web tools.** List directories, inspect paginated UTF-8 files, find literal matches, write files, run allowlisted commands, or search the web.
 - **Cited research.** Use up to five Tavily excerpts, validate source references against the retrieved links, and display Jev’s evidence judgment alongside the answer.
 - **Interactive sessions.** Keep one model loaded, switch into research mode with `/research`, and resume completed conversations from SQLite.
-- **Run metrics and evaluation.** Inspect elapsed time, model-call counts, token throughput, and Jev judgments. Replay labeled cases to see where a decision threshold would trigger another search.
+- **Run metrics and evaluation.** Inspect elapsed time, model-call counts, token throughput, and Jev judgments. Replay frozen incident cases to compare retrieval, diagnosis quality, and local versus hosted inference.
 
 ## System Architecture
 
@@ -45,7 +45,7 @@ flowchart TD
     CLI -.->|Run events and completed history| SQLite[("Local SQLite session store")]
 ```
 
-The Python application controls tool execution and the general agent’s response budget. In research mode, Jev judges the excerpts before synthesis and its result is displayed and traced. The selected language model writes the answer from the excerpts. The research workflow performs one search regardless of the judgment.
+The Python application controls tool execution and the general agent’s response budget. In research mode, Jev judges the excerpts before synthesis and its result is displayed and traced. The workflow performs one search regardless of the judgment. Tavily and TypeSafe are called through their HTTP APIs, not MCP.
 
 ## Repository Layout
 
@@ -58,7 +58,10 @@ The Python application controls tool execution and the general agent’s respons
 | [`response_types.py`](response_types.py), [`request_metrics.py`](request_metrics.py) | Shared response types and token-throughput reporting |
 | [`session_store.py`](session_store.py) | SQLite sessions, execution events, checkpoints, and process locks |
 | [`benchmark_search.py`](benchmark_search.py), [`benchmark_research.py`](benchmark_research.py), [`research_cases.py`](research_cases.py) | Search-provider comparison and labeled evidence evaluation |
-| [`test_*.py`](#tests-and-evaluation) | Regression tests for tools, research, sessions, and model adapters |
+| [`benchmark_incidents.py`](benchmark_incidents.py), [`incident_retrieval.py`](incident_retrieval.py) | Offline keyword and hybrid retrieval on frozen incident evidence |
+| [`benchmark_diagnosis.py`](benchmark_diagnosis.py), [`incident_diagnosis.py`](incident_diagnosis.py), [`incident_grading.py`](incident_grading.py) | Cited diagnosis, bounded read-only lookup, and separate evidence, correctness, and abstention grades |
+| [`benchmark_inference.py`](benchmark_inference.py), [`benchmark_grounding.py`](benchmark_grounding.py), [`incident_grounding.py`](incident_grounding.py) | MLX versus hosted inference and the optional grounding pilot |
+| [`test_*.py`](#tests-and-evaluation) | Regression tests for tools, research, sessions, model adapters, and benchmarks |
 
 ## Setup
 
@@ -133,7 +136,7 @@ Use the Left and Right arrow keys to move within a question before submitting it
 
 The default database is `.agent/sessions.sqlite3`. Use `--db PATH` to choose another location or `--no-trace` to work without persistence. With tracing disabled, `/research` and `/new` still switch modes. Resume requires the original backend, model identity, and working directory. It restores the last completed checkpoint without replaying tool calls.
 
-Each run reports elapsed time and, where the backend supplies usable timing data, tokens per second. Interactive mode reports model initialization separately from request timing. Local decode speed and API request throughput use different timing bases.
+Each run’s timing summary starts with the selected backend (for example, `mlx processed request in …`) and reports elapsed time and tokens per second when available. Interactive mode reports model initialization separately. Local decode speed and API request throughput use different timing bases.
 
 ## Model Backends
 
@@ -171,15 +174,31 @@ python3 benchmark_research.py --live --case gpt-names
 
 For the Tavily benchmark, mark `useful_top_5` for each query, then run `python3 benchmark_search.py --score tavily-search-report.json`. The research benchmark measures label agreement, false `supported` judgments, and latency on frozen excerpts. Jev matched all 18 judged cases in the initial pilot, skipped two empty cases, and had a median latency of 195 ms. A proposed 75% cutoff would have triggered extra searches for four of five adequately supported held-out cases. See the [Jev research plan](JEV_RESEARCH_PLAN.md#first-milestone-results) for the dataset and evaluation details.
 
-### Incident retrieval benchmark
+### Incident Runbook Benchmarks
 
-[Milestone 1](INCIDENT_RUNBOOK_PLAN.md#milestone-1-results) compares keyword and hybrid retrieval on frozen Kubernetes runbooks and synthetic incidents. On the same 12 answerable held-out questions, BM25 scored **80.56% Recall@5** and hybrid scored **83.33%**; both found the full evidence set for 7 of 12. Four additional insufficient-evidence cases are reported separately. See the plan for setup and replay commands and the [JSON report](incident_retrieval_report.json) for per-question rankings. This benchmark does not generate answers or call hosted models.
+These are separate evaluation scripts, not a mode in `agent.py`. The incident workflow explains synthetic incidents from cited evidence; it does not query clusters or run remediation. All four evaluation milestones are complete. **Citation verification is off by default** and runs only in the verified arm of the grounding benchmark. It is separate from Jev’s shadow check in web research.
+
+| Evaluation | Result | Artifacts |
+| --- | --- | --- |
+| **Retrieval** | On 12 answerable held-out cases, BM25 scored **80.56% Recall@5** and hybrid **83.33%**. Both recovered all labeled passages in 7/12; four insufficient cases were reported separately. | [Method and setup](INCIDENT_RUNBOOK_PLAN.md#milestone-1-results) · [Report](incident_retrieval_report.json) |
+| **Cited diagnosis** | The fixed and bounded read-only workflows each scored **10/16 fully correct**. The lookup added observations in three cases without improving that total. Citation support, conclusion correctness, and abstention were graded separately. | [Trace analysis](INCIDENT_RUNBOOK_PLAN.md#milestone-2-results) · [Report](incident_diagnosis_report.json) |
+| **Local vs. hosted inference** | On the same 16 cases per condition, warm MLX and OpenAI median times to first text were **5.22 s** and **0.50 s**; median end-to-end times were **9.49 s** and **1.69 s**. Warm fully correct counts were **4/16** and **10/16**. MLX peaked at **2.94 GiB of allocator memory** on the 32 GiB M1 Pro. Estimated OpenAI cost was **$0.00772** for 32 measured requests, excluding priming. | [Cold and warm results, settings, and workload guidance](INCIDENT_RUNBOOK_PLAN.md#milestone-3-results) · [Report](incident_inference_report.json) |
+| **Citation verification pilot** | On 10 fresh cases, unsupported conclusions fell from **7/16 to 6/15** and fully correct runs rose from **3/10 to 4/10**, with no unnecessary abstentions in either arm. Median latency rose from **2.30 s to 5.49 s**. The pilot did not justify enabling verification by default. | [Analysis](INCIDENT_RUNBOOK_PLAN.md#milestone-4-results) · [Report](incident_grounding_report.json) |
+
+To regrade the published diagnosis and grounding results without model calls or credentials:
+
+```bash
+python3 benchmark_diagnosis.py grade incident_diagnosis_report.json incident_diagnosis_reviews.json
+python3 benchmark_grounding.py grade incident_grounding_report.json incident_grounding_reviews.json
+```
+
+See [MILESTONES.md](MILESTONES.md) for acceptance criteria and the [incident plan](INCIDENT_RUNBOOK_PLAN.md) for live replay commands. Offline retrieval requires SQLite FTS5 and a one-time download of pinned embedding weights. Local inference requires an Apple Silicon terminal with Metal access and the pinned MLX snapshot; hosted replay requires an OpenAI API key and incurs token charges. New inference runs need fresh semantic reviews.
 
 ## Scope and Data Handling
 
 The general agent’s file tools operate with the running user’s permissions. They can access paths outside the project and overwrite existing files. Use a dedicated working directory or an OS sandbox if you need to limit that access.
 
-With cloud inference, tool observations can be sent to the configured model provider. Local inference keeps model execution on your machine when you use MLX, AirLLM, or a local Strata endpoint. Tavily receives web queries. TypeSafe receives the public research question and excerpts when Jev is enabled. SQLite traces can retain requests, excerpts, tool output, and answers.
+With hosted inference, tool observations can be sent to the configured provider. MLX, AirLLM, and a local Strata endpoint keep model execution on your machine, but using Tavily or Jev still makes network requests: Tavily receives web queries, and TypeSafe receives the public research question and excerpts when Jev is enabled. Hosted incident benchmarks send only public runbook excerpts and synthetic case evidence. SQLite traces can retain requests, excerpts, tool output, and answers.
 
 ## Author
 
