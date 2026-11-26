@@ -26,9 +26,23 @@ Both workflows completed all 16 held-out cases. The bounded lookup added evidenc
 
 ## Milestone 3: Benchmark local MLX and hosted inference
 
-**Status: Not started**
+**Status: Complete**
 
 ### Acceptance criteria
 
-- [ ] Run the same cases with recorded model versions and settings. Record answer quality, time to first token, and end-to-end latency, including warm and cold runs.
-- [ ] Document peak local memory and hosted cost where measurable. Explain which workloads fit the M1 Pro and which benefit from hosted inference.
+- [x] Run the same cases with recorded model versions and settings. Record answer quality, time to first token, and end-to-end latency, including warm and cold runs.
+- [x] Document peak local memory and hosted cost where measurable. Explain which workloads fit the M1 Pro and which benefit from hosted inference.
+
+Each backend completed the same 16 held-out cases under both conditions. See the [results and workload guidance](INCIDENT_RUNBOOK_PLAN.md#milestone-3-results), [per-run benchmark report](incident_inference_report.json), and [semantic review notes](incident_inference_reviews.json).
+
+## Milestone 4: Improve evidence grounding and calibrate abstention
+
+**Status: Complete (pilot; not enabled by default)**
+
+### Acceptance criteria
+
+- [x] Compare the fixed workflow with one bounded citation-verification pass that can drop unsupported conclusions and abstain with a specific evidence request.
+- [x] Evaluate both workflows on the same fresh, frozen held-out cases and evidence packets.
+- [x] Report unsupported conclusions, fully correct runs, unnecessary abstentions, latency, and cost.
+
+The verifier removed one unsupported conclusion without dropping any supported claims in this 10-case pilot. Six unsupported conclusions remained. See the [analysis](INCIDENT_RUNBOOK_PLAN.md#milestone-4-results), [report](incident_grounding_report.json), and [semantic reviews](incident_grounding_reviews.json).

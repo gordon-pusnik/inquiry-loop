@@ -1,6 +1,6 @@
 # Cited incident explanations and inference comparison
 
-**Status** — Milestones 1 and 2 complete. The local MLX versus hosted inference comparison is not implemented. See [milestone status](MILESTONES.md).
+**Status** — Milestones 1–4 complete. The Milestone 4 verifier is evaluated but not enabled by default. See [milestone status](MILESTONES.md).
 
 ## Feature goal
 
@@ -106,3 +106,69 @@ python3 -m unittest test_incident_diagnosis
 ```
 
 A new run needs its own reviews. Full trace events are stored locally in `.agent/incident-diagnosis.sqlite3` by default; identify a run by its `run_id` from the report and query `events` in `id` order or use `SessionStore.events(run_id)`.
+
+## Milestone 3 results
+
+Both backends streamed one tool-free response on each of the same 16 held-out cases per condition. They used the fixed workflow, the same instructions, the same ordered hybrid top-five evidence, temperature 0, and a 512-token cap. The MLX configuration was `mlx-community/Qwen3-4B-4bit` at revision `4dcb3d101c2a062e5c1d4bb173588c54ea6c4d25` (4,096-token context ceiling, thinking off, MLX 0.32.4, MLX-LM 0.32.2). Hosted used `gpt-4o-mini-2024-07-18` with API JSON mode and OpenAI SDK 3.50.0. Both outputs passed the same schema and citation-ID checks. This compares those configurations, not hosting in isolation: model, tokenizer, output lengths, and hosted JSON mode differ.
+
+**Cold** means a fresh MLX model instance from cached weights or a new hosted client/connection for each case. Neither OS caches nor provider state were flushed. **Warm** reuses one primed instance or client, with fresh model conversation state for every case and a fresh MLX prompt cache. Runs were sequential with cold first; the warm OpenAI pass received 24,960 provider-cached input tokens, versus zero reported on the cold pass. Effects from connection reuse, prompt caching, and run order are not isolated.
+
+| Configuration | Completed | Median time to first text | Median end-to-end | Median with startup | Fully correct |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| MLX cold | 16/16 | 5.29 s | 8.56 s | 9.36 s | 4/16 |
+| MLX warm | 16/16 | 5.22 s | 9.49 s | 9.49 s | 4/16 |
+| OpenAI cold | 16/16 | 0.65 s | 1.86 s | 1.86 s | 9/16 |
+| OpenAI warm | 16/16 | 0.50 s | 1.69 s | 1.69 s | 10/16 |
+
+Time to first text is the client-side time from inference call entry to the first nonblank visible streamed output (a practical TTFT measure). End-to-end includes evidence assembly, one streamed response, and validation, but excludes retrieval replay, startup, and final trace persistence. The startup column includes the model/client initialization for cold requests; warm initialization and priming are recorded separately. This one pass does not establish that warm MLX is slower: the result is sensitive to local load and run order. MLX also produced longer answers in this pilot (median 171.5 vs 87.5 output tokens; tokenizers differ).
+
+| Quality metric | MLX cold / warm | OpenAI cold / warm |
+| --- | ---: | ---: |
+| Citation support per emitted conclusion | 15/33 · 15/33 | 11/18 · 11/17 |
+| Correctness per emitted conclusion | 22/33 · 22/33 | 14/18 · 14/17 |
+| Correct decision to diagnose or abstain | 15/16 · 15/16 | 13/16 · 14/16 |
+
+The unblinded, model-assisted reviews used the Milestone 2 rubric. MLX abstained correctly on `inc-11`, where hosted inferred an unsupported namespace cause. Hosted identified the scheduler/PVC blocker in `inc-15`, where MLX abstained. Some MLX answers reached the right diagnosis but split the supporting observations across separate claims, leaving individual citations incomplete. Review counts are descriptive; the cold and warm passes reuse cases and are not independent quality samples.
+
+**Memory and cost.** Peak MLX allocator memory was **3,153,384,424 bytes (2.94 GiB)** in both conditions on the **32 GiB Apple M1 Pro**; this includes resident MLX allocations during generation, not total process or system memory. Hosted token usage priced at [GPT-4o mini list rates](https://developers.openai.com/api/docs/models/gpt-4o-mini) ($0.15 input, $0.075 cached input, $0.60 output per million; checked 2026-11-25) came to **$0.00480 cold** and **$0.00292 warm**, or **$0.00772 for 32 measured requests** ($0.00791 including priming). These are estimates, not billing data; local power cost and hosted memory were not measured.
+
+**Which workloads fit.** The measured 4-bit 4B model fits short, sequential, offline incident triage on this M1 Pro (up to 2,000 input and 235 output tokens observed); it keeps evidence local and is a reasonable option when several seconds of latency and human review are acceptable. Hosted was better suited in this pilot to interactive, latency-sensitive work and more frequently produced fully correct, cited diagnoses, but needs connectivity and a policy that permits sending evidence off-device. Larger local models, long contexts, and parallel requests were not measured; do not extrapolate this memory result to them. Neither backend’s output should be taken as proof of a diagnosis without checking the cited evidence.
+
+The [inference report](incident_inference_report.json) includes per-run settings, usage, latency, model fingerprints where reported, and quality scores. [Semantic reviews](incident_inference_reviews.json) are keyed by run ID. Exact historical grades reproduce offline from the two recordings embedded in the report. For new runs, use the pinned snapshot listed above, a Metal-capable local terminal, and configure `OPENAI_API_KEY` for the hosted run (only public and synthetic evidence is sent):
+
+```bash
+HF_HUB_OFFLINE=1 python3 benchmark_inference.py run mlx > .agent/incident-inference-mlx.json
+python3 benchmark_inference.py run openai > .agent/incident-inference-openai.json
+python3 benchmark_inference.py grade .agent/incident-inference-mlx.json .agent/incident-inference-openai.json incident_inference_reviews.json
+```
+
+The grade command above expects the original recorded run IDs for the published reviews. Create new reviews for new recordings. SQLite traces are stored locally in `.agent/incident-inference.sqlite3` by default.
+
+## Milestone 4 results
+
+The [fresh held-out set](incident_grounding_cases.json) contains ten synthetic incidents: six answerable from the full corpus and four insufficient. Each case has a frozen, manually selected five-passage packet from the same runbooks and its own observations. This evaluates synthesis and verification, not retrieval ranking. One answerable case (`ground-02`) deliberately omits a decisive observation; it is still scored against corpus answerability and reported as missing gold evidence in its packet.
+
+Both arms use the exact same draft from `gpt-4o-mini-2024-07-18` (temperature 0, JSON mode, 512-token completion cap). The fixed arm publishes the draft; the verified arm replays it and makes at most one additional call, using only the cited subset of the frozen packet. It can retain each claim verbatim or drop it; it cannot rewrite claims, supply new claims or citations, or query external evidence. If nothing supported answers the question, it abstains and names the observation needed. An initial abstention passes through unchanged. Unblinded, model-assisted reviews reused the Milestone 2 rubric.
+
+| Metric | Fixed | Verified |
+| --- | ---: | ---: |
+| Unsupported conclusions | 7/16 | 6/15 |
+| Correct conclusions | 9/16 | 9/15 |
+| Correct diagnose-or-abstain status | 7/10 | 8/10 |
+| Unnecessary abstentions | 0/6 | 0/6 |
+| Fully correct runs | 3/10 | 4/10 |
+| Median workflow latency | 2.30 s | 5.49 s |
+| Estimated token cost for 10 cases | $0.00238 | $0.00449 |
+
+The trace shows one changed answer. In `ground-08`, the fixed arm asserted a mount failure without evidence. The verified arm dropped that claim, abstained, and asked for attachment and mount status after rescheduling. It did not remove any supported claims in this sample. It still missed several errors: `ground-02` inferred a scheduling blocker from a Bound PVC without seeing the scheduler event, and `ground-03` treated a dashboard percentage as the trigger even though the HPA used a raw value. The result is directional: one improved case and six remaining unsupported claims do not justify enabling the verifier by default.
+
+Verified-arm latency substitutes the measured original synthesis call for the near-zero replay call; cost includes the original draft plus verification, using provider-reported usage at the same list rates as Milestone 3. The estimates compare running each workflow independently; the pilot itself only paid for each shared draft once. The [per-case report](incident_grounding_report.json) and [review notes](incident_grounding_reviews.json) retain the decisions, timing, and grades. SQLite traces are stored locally in `.agent/incident-grounding.sqlite3`.
+
+```bash
+# Regrade the original recording offline.
+python3 benchmark_grounding.py grade incident_grounding_report.json incident_grounding_reviews.json
+# Start a new pilot with a configured OPENAI_API_KEY (public and synthetic evidence only).
+python3 benchmark_grounding.py run > .agent/incident-grounding-runs.json
+```
+
+New runs require new semantic reviews keyed to their run IDs.

@@ -10,9 +10,58 @@ import json
 import os
 from pathlib import Path
 import sys
+from time import perf_counter
 from uuid import uuid4
 
 DEFAULT_MODEL = "mlx-community/Qwen3-4B-4bit"
+
+
+class _VisibleText:
+    """Recognize answer text across streamed chunks without parsing tool arguments."""
+
+    def __init__(self, tokenizer):
+        self.markers = [(tokenizer.tool_call_start, tokenizer.tool_call_end)]
+        think_start = getattr(tokenizer, "think_start", None)
+        think_end = getattr(tokenizer, "think_end", None)
+        if isinstance(think_start, str) and isinstance(think_end, str) and think_start and think_end:
+            self.markers.append((think_start, think_end))
+        self.end = None
+        self.pending = ""
+        self.pending_at = None
+
+    def feed(self, chunk, *, final=False):
+        text = self.pending + chunk
+        pending_at = self.pending_at
+        self.pending = ""
+        self.pending_at = None
+        while text:
+            if self.end:
+                stop = text.find(self.end)
+                if stop < 0:
+                    # Keep just enough to catch a closing marker split across chunks.
+                    self.pending = text[max(0, len(text) - len(self.end) + 1):]
+                    return None
+                text = text[stop + len(self.end):]
+                self.end = None
+            else:
+                text = text.lstrip()
+                if not text:
+                    return None
+                for start, end in self.markers:
+                    if text.startswith(start):
+                        text = text[len(start):]
+                        self.end = end
+                        pending_at = None
+                        break
+                else:
+                    first_at = perf_counter() if pending_at is None else pending_at
+                    if not final and any(start.startswith(text) for start, _ in self.markers):
+                        # If this turns out to be literal text, use its arrival time.
+                        self.pending = text
+                        self.pending_at = first_at
+                        return None
+                    return first_at
+        return None
 
 
 class MLXModel:
@@ -128,8 +177,13 @@ class MLXModel:
         return calls, result
 
     def respond(self, messages):
+        started = perf_counter()
         if self.model is None:
             raise RuntimeError("The MLX model is closed.")
+        self.last_stats = {"ttft_seconds": None, "peak_memory_bytes": None}
+        reset_peak = getattr(self.mx, "reset_peak_memory", None)
+        if callable(reset_peak):
+            reset_peak()
         prompt = self.tokenizer.apply_chat_template(
             self._messages(messages), tools=self.tool_schemas, tokenize=False,
             add_generation_prompt=True, enable_thinking=False,
@@ -137,8 +191,7 @@ class MLXModel:
         tokens = self.tokenizer.encode(prompt, add_special_tokens=False)
         if len(tokens) + self.max_tokens > self.max_context_tokens:
             raise ValueError("MLX context budget exceeded. Shorten the task or adjust MLX_MAX_CONTEXT_TOKENS within your memory budget.")
-        self.last_stats = {}
-        self.mx.reset_peak_memory()
+        visible = _VisibleText(self.tokenizer)
         stream = self._stream_generate(
             self.model, self.tokenizer, prompt=tokens, max_tokens=self.max_tokens,
             sampler=self._sampler, prefill_step_size=self.prefill_step_size,
@@ -148,15 +201,30 @@ class MLXModel:
             for response in stream:
                 parts.append(response.text)
                 finish = response.finish_reason
+                if self.last_stats["ttft_seconds"] is None:
+                    first_at = visible.feed(response.text, final=finish is not None)
+                    if first_at is not None:
+                        self.last_stats["ttft_seconds"] = first_at - started
                 if finish is not None:
-                    self.last_stats = {name: getattr(response, name, None) for name in (
-                        "prompt_tokens", "generation_tokens", "prompt_tps", "generation_tps", "peak_memory")}
+                    # MLX-LM reports peak_memory in GB, not bytes.
+                    self.last_stats.update({name: getattr(response, name, None) for name in (
+                        "prompt_tokens", "generation_tokens", "prompt_tps", "generation_tps", "peak_memory")})
         finally:
             stream.close()
             # Each response uses a fresh prompt cache. Return unused buffers to
             # the allocator between agent turns without unloading model weights.
             self.mx.synchronize()
-            self.mx.clear_cache()
+            try:
+                get_peak = getattr(self.mx, "get_peak_memory", None)
+                if callable(get_peak):
+                    peak = get_peak()
+                    if type(peak) is int:
+                        self.last_stats["peak_memory_bytes"] = peak
+            except RuntimeError:
+                # Memory telemetry can be unavailable on some MLX versions/devices.
+                pass
+            finally:
+                self.mx.clear_cache()
         if finish != "stop":
             raise ValueError(f"MLX-LM did not finish within its output budget ({self.max_tokens} tokens); partial output was discarded and no partial tool calls were executed. Request a concise assessment or increase MLX_MAX_TOKENS within the context budget.")
         calls, text = self._parse_response("".join(parts))

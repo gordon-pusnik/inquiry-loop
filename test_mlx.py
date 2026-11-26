@@ -112,6 +112,91 @@ class MLXTests(unittest.TestCase):
         self.assertEqual(self.generate.call_args.kwargs["prefill_step_size"], 512)
         self.assertEqual(self.generate.call_args.kwargs["prompt"], [1, 2, 3])
 
+    def test_ttft_includes_prompt_work_and_waits_for_visible_text(self):
+        now = 100.0
+
+        def render(*args, **kwargs):
+            nonlocal now
+            now += 2
+            return "formatted prompt"
+
+        def encode(*args, **kwargs):
+            nonlocal now
+            now += 3
+            return [1, 2, 3]
+
+        def generate(*args, **kwargs):
+            nonlocal now
+            for chunk in ("", " \n", "<thi", "nk>private</thi", "nk>\n<tool_",
+                          'call>{"name":"list_dir","arguments":{}}', "</tool_call>\n", "Hello"):
+                now += 1
+                yield SimpleNamespace(text=chunk, finish_reason=None)
+            now += 10
+            yield SimpleNamespace(text=" world", finish_reason="stop", peak_memory=3.0)
+
+        def reset_peak():
+            self.load.assert_called_once()
+            self.tokenizer.apply_chat_template.assert_not_called()
+
+        def get_peak():
+            self.mx.synchronize.assert_called_once()
+            self.mx.clear_cache.assert_not_called()
+            return 3_000_000_123
+
+        self.tokenizer.apply_chat_template.side_effect = render
+        self.tokenizer.encode.side_effect = encode
+        self.generate.side_effect = generate
+        self.mx.reset_peak_memory.side_effect = reset_peak
+        self.mx.get_peak_memory.side_effect = get_peak
+        model = self.make_model()
+        with patch("mlx_eng.perf_counter", side_effect=lambda: now):
+            response = model.respond([])
+
+        self.assertEqual(response.text, "Hello world")
+        self.assertEqual(len(response.tool_calls), 1)
+        self.assertEqual(response.stats, model.last_stats)
+        self.assertEqual(response.stats["ttft_seconds"], 13.0)
+        self.assertEqual(response.stats["peak_memory_bytes"], 3_000_000_123)
+        self.assertEqual(response.stats["peak_memory"], 3.0)
+        self.mx.reset_peak_memory.assert_called_once()
+        self.mx.get_peak_memory.assert_called_once()
+        self.mx.clear_cache.assert_called_once()
+
+    def test_literal_marker_prefix_uses_its_arrival_time(self):
+        model = self.make_model()
+
+
+        def generate(*args, **kwargs):
+            yield SimpleNamespace(text="<", finish_reason=None)
+            yield SimpleNamespace(text="", finish_reason="stop")
+
+        self.generate.side_effect = generate
+        with patch("mlx_eng.perf_counter", side_effect=[10.0, 11.0]):
+            response = model.respond([])
+        self.assertEqual(response.text, "<")
+        self.assertEqual(response.stats["ttft_seconds"], 1.0)
+
+    def test_tool_only_response_has_no_ttft_and_memory_api_is_optional(self):
+        model = self.make_model()
+        self.mx.get_peak_memory.return_value = 512
+        self.generate.side_effect = lambda *args, **kwargs: self.stream("Answer")
+        first = model.respond([])
+        self.assertIsNotNone(first.stats["ttft_seconds"])
+        self.assertEqual(first.stats["peak_memory_bytes"], 512)
+
+        del self.mx.get_peak_memory
+        self.generate.side_effect = lambda *args, **kwargs: self.stream(
+            '<tool_call>{"name":"list_dir","arguments":{}}</tool_call> \n')
+        with patch("mlx_eng.perf_counter", side_effect=[100.0]):
+            second = model.respond([])
+        self.assertEqual(second.text, "")
+        self.assertEqual(len(second.tool_calls), 1)
+        self.assertIsNone(second.stats["ttft_seconds"])
+        self.assertIsNone(second.stats["peak_memory_bytes"])
+        self.assertEqual(second.stats["peak_memory"], 3.0)
+        self.assertEqual(self.mx.reset_peak_memory.call_count, 2)
+        self.assertEqual(first.stats["peak_memory_bytes"], 512)
+
     def test_history_conversion_does_not_mutate_agent_messages(self):
         model = self.make_model()
         messages = [{"role": "assistant", "tool_calls": [{"function": {"arguments": '{"path":"."}'}}]}]
@@ -184,11 +269,15 @@ class MLXTests(unittest.TestCase):
 
     def test_output_limit_and_generation_error_cleanup(self):
         model = self.make_model()
+        self.mx.get_peak_memory.return_value = 2048
         self.generate.side_effect = lambda *args, **kwargs: self.stream("partial", finish="length")
         with self.assertRaisesRegex(ValueError, "output budget"):
             model.respond([])
         self.assertTrue(self.closed)
         self.mx.clear_cache.assert_called()
+        self.assertIsNotNone(model.last_stats["ttft_seconds"])
+        self.assertEqual(model.last_stats["peak_memory_bytes"], 2048)
+        self.assertEqual(model.last_stats["generation_tokens"], 12)
 
         def broken(*args, **kwargs):
             yield SimpleNamespace(text="x", finish_reason=None)
@@ -199,6 +288,17 @@ class MLXTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "generation failed"):
             model.respond([])
         self.assertGreater(self.mx.clear_cache.call_count, before)
+
+    def test_parse_failure_retains_metrics(self):
+        model = self.make_model()
+        self.mx.get_peak_memory.return_value = 1024
+        self.generate.side_effect = lambda *args, **kwargs: self.stream("Answer <tool_call>bad</tool_call>")
+        with patch("mlx_eng.perf_counter", side_effect=[10.0, 11.0]):
+            with self.assertRaisesRegex(ValueError, "invalid tool arguments"):
+                model.respond([])
+        self.assertEqual(model.last_stats["ttft_seconds"], 1.0)
+        self.assertEqual(model.last_stats["peak_memory_bytes"], 1024)
+        self.assertEqual(model.last_stats["generation_tokens"], 12)
 
     def test_context_overflow_does_not_generate_or_truncate(self):
         model = self.make_model(max_tokens=16, max_context_tokens=32)

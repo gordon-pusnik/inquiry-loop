@@ -1,0 +1,144 @@
+[
+  {
+    "id": "ground-01",
+    "question": "Why does the same external NodePort request to parcel-api succeed on worker-west but time out on worker-east even though both nodes are Ready?",
+    "answerable": true,
+    "gold": ["rb:k8s-service", "ground-01:service", "ground-01:slices", "ground-01:proxy"],
+    "partial": [],
+    "rationale": "The Service uses Local external traffic policy, and its only ready endpoints are on worker-west. The proxy trace confirms worker-east dropped the request for lack of a local endpoint. Node readiness and working Service DNS do not guarantee an eligible backend on every node.",
+    "observations": [
+      {"id": "ground-01:service", "text": "At 14:20 the parcel-api Service was type NodePort, externalTrafficPolicy: Local, nodePort: 30443/TCP. The same external client got HTTP 200 at worker-west:30443 and timed out at worker-east:30443."},
+      {"id": "ground-01:slices", "text": "The parcel-api EndpointSlices at 14:20 showed two ready endpoints; both had nodeName: worker-west. No endpoint was assigned to worker-east."},
+      {"id": "ground-01:proxy", "text": "The worker-east service proxy's packet trace shows the SYN at 14:20 for parcel-api's NodePort arriving and being dropped by the external Local path: no local endpoints."},
+      {"id": "ground-01:health", "text": "Both workers reported Ready. A debug pod resolved parcel-api and got HTTP 200 through its ClusterIP."}
+    ],
+    "initial_ids": ["ground-01:service", "ground-01:health", "rb:k8s-service", "ground-01:slices", "ground-01:proxy"]
+  },
+  {
+    "id": "ground-02",
+    "question": "What prevents map-cache-0 from scheduling when its pre-bound claim is already Bound and the eligible GPU node has room?",
+    "answerable": true,
+    "gold": ["rb:k8s-pvc", "ground-02:claim", "ground-02:placement", "ground-02:scheduler"],
+    "partial": [],
+    "rationale": "The claim was explicitly pre-bound, which does not guarantee that the pod can run on a node allowed by the volume. The scheduler record establishes that the only pod-eligible node conflicts with the PV's node affinity. The corpus is answerable; the frozen packet omits ground-02:scheduler, the gold observation that identifies the scheduling constraint. The Bound claim and spare resources alone do not establish that cause.",
+    "observations": [
+      {"id": "ground-02:claim", "text": "map-cache-0 references map-snapshot. The PVC explicitly names local-snapshot-7 in spec.volumeName and is Bound to that PV."},
+      {"id": "ground-02:placement", "text": "map-cache-0 requires gpu=true. gpu-a is the only node with that label and has spare GPU, CPU, and memory capacity. The PV node affinity is not included in the storage dashboard export."},
+      {"id": "ground-02:scheduler", "text": "Scheduler diagnostics for this pod UID: gpu-a passed the pod's node selector and resource checks but failed VolumeBinding (volume node affinity conflict). The bound PV requires kubernetes.io/hostname=storage-b; storage-b failed the pod's gpu=true selector."},
+      {"id": "ground-02:status", "text": "The pod remains Pending with no spec.nodeName; its container has not started."}
+    ],
+    "initial_ids": ["rb:k8s-pvc", "ground-02:status", "ground-02:placement", "rb:k8s-resources", "ground-02:claim"]
+  },
+  {
+    "id": "ground-03",
+    "question": "Why did the caption HPA recommend going from four to six replicas when the CPU dashboard showed only 15% of requested CPU?",
+    "answerable": true,
+    "gold": ["rb:k8s-hpa", "ground-03:metric", "ground-03:decision", "ground-03:dashboard"],
+    "partial": [],
+    "rationale": "The HPA compares raw average CPU usage of 450m with a 300m AverageValue target, a ratio of 1.5. Applied to four replicas, that yields six, as the controller recorded. The dashboard's 15% uses the 3000m CPU request as its denominator; it is not the HPA target.",
+    "observations": [
+      {"id": "ground-03:metric", "text": "The caption HPA has one metric: Resource cpu, target type AverageValue, averageValue: 300m. Its replica bounds are 2 and 12."},
+      {"id": "ground-03:decision", "text": "During the 09:12 reconciliation the HPA collected CPU samples from all four Ready replicas, recorded current.averageValue: 450m, and recommended six replicas for the CPU metric."},
+      {"id": "ground-03:dashboard", "text": "The dashboard divides average usage of 450m by a 3000m CPU request per pod; it displayed 15% at 09:12."}
+    ],
+    "initial_ids": ["ground-03:dashboard", "rb:k8s-resources", "ground-03:decision", "rb:k8s-hpa", "ground-03:metric"]
+  },
+  {
+    "id": "ground-04",
+    "question": "Why did the new mosaic image never get a ReplicaSet even though the template edit was accepted, and does the Deployment deadline automatically roll it back?",
+    "answerable": true,
+    "gold": ["rb:k8s-rollout", "ground-04:history", "ground-04:controller"],
+    "partial": [],
+    "rationale": "The Deployment was already paused before the edit and stayed paused, so the controller deferred the rollout; there was no new ReplicaSet whose pods could fail. A Deployment progress deadline reports a stall rather than triggering an automatic rollback, and progress is not checked against the deadline while the rollout is paused.",
+    "observations": [
+      {"id": "ground-04:history", "text": "The Deployment watch shows mosaic was paused at generation 17. Generation 18 changes the pod template to image mosaic:v8 and still has spec.paused=true; no resume appears during the incident."},
+      {"id": "ground-04:controller", "text": "The Deployment controller observed generation 18, reported Progressing=Unknown with reason DeploymentPaused, and skipped rollout reconciliation. The only owned ReplicaSet still uses mosaic:v7."},
+      {"id": "ground-04:alert", "text": "The delivery dashboard raised a generic rollout-stalled alert because 900 seconds had elapsed since the edit. The Deployment's spec.progressDeadlineSeconds is 600; the alert did not read its conditions."}
+    ],
+    "initial_ids": ["ground-04:alert", "rb:k8s-rollout", "ground-04:history", "rb:k8s-probes", "ground-04:controller"]
+  },
+  {
+    "id": "ground-05",
+    "question": "How did receipt-1 get deleted during maintenance even though its disruption budget allowed zero evictions?",
+    "answerable": true,
+    "gold": ["rb:k8s-pdb", "ground-05:budget", "ground-05:audit"],
+    "partial": [],
+    "rationale": "The matching budget allowed no disruptions, but the successful audit event was a direct Pod DELETE, not an Eviction API request. The PDB's voluntary-eviction check did not govern that deletion. The maintenance window alone would not identify the API operation.",
+    "observations": [
+      {"id": "ground-05:budget", "text": "The receipt PDB selected receipt-1 and required all three replicas to be healthy. Snapshots bracketing the deletion showed disruptionsAllowed=0."},
+      {"id": "ground-05:audit", "text": "The API audit response for the deleted pod's UID shows a successful DELETE on resource pods, name receipt-1, with no subresource. The deletionTimestamp immediately followed that request."},
+      {"id": "ground-05:calendar", "text": "A node maintenance window was open. The maintenance dashboard grouped pod terminations under 'drain activity' without recording which API operation was used."}
+    ],
+    "initial_ids": ["ground-05:calendar", "rb:k8s-eviction", "ground-05:budget", "rb:k8s-pdb", "ground-05:audit"]
+  },
+  {
+    "id": "ground-06",
+    "question": "Why is the invoice gateway still at 0/1 Ready after prepare-schema completed, and has its readiness probe run yet?",
+    "answerable": true,
+    "gold": ["rb:k8s-debug-init", "ground-06:statuses", "ground-06:config"],
+    "partial": [],
+    "rationale": "Successful init is not successful application startup. The gateway is waiting for a required Secret key and has never started in this pod, so its readiness probe has not run. The 0/1 count is not evidence of a failed readiness check.",
+    "observations": [
+      {"id": "ground-06:statuses", "text": "For the current invoice gateway pod UID, Initialized=True and prepare-schema terminated with exitCode=0. The gateway container is waiting with CreateContainerConfigError and has no containerID, start timestamp, or previous state."},
+      {"id": "ground-06:config", "text": "The gateway declares INVOICE_REGION from the non-optional key region in Secret invoice-settings. The kubelet event for this pod UID says it couldn't find key region in Secret billing/invoice-settings."},
+      {"id": "ground-06:probe", "text": "The gateway template defines an HTTP readiness probe on /ready. A generic panel describes the pod as '0/1 Ready' and has no probe samples for the current pod UID."}
+    ],
+    "initial_ids": ["ground-06:probe", "rb:k8s-debug-init", "ground-06:config", "rb:k8s-probes", "ground-06:statuses"]
+  },
+  {
+    "id": "ground-07",
+    "question": "Did the external NodePort request to dispatch-api time out on edge-b because Local policy left that node without a backend, or did the request never reach edge-b?",
+    "answerable": false,
+    "gold": [],
+    "partial": ["rb:k8s-service", "ground-07:external", "ground-07:service"],
+    "rationale": "The timeout is node-specific and Local policy is enabled, but there is no node-level endpoint placement or record of packet arrival on edge-b. The service runbook describes what to inspect, not whether either event occurred. Neither the client result nor a working ClusterIP distinguishes the proposed causes.",
+    "observations": [
+      {"id": "ground-07:external", "text": "At 16:31 the same external client got HTTP 200 from edge-a:31080 and a TCP connect timeout at edge-b:31080."},
+      {"id": "ground-07:service", "text": "dispatch-api uses TCP NodePort 31080 and externalTrafficPolicy: Local. Its incident dashboard retained a service-wide count of two ready endpoints but did not record which nodes hosted them."},
+      {"id": "ground-07:internal", "text": "An in-cluster probe resolved dispatch-api and received HTTP 200 via ClusterIP at 16:31. Both edge nodes showed Ready."}
+    ],
+    "initial_ids": ["ground-07:external", "rb:k8s-service", "ground-07:internal", "rb:k8s-dns", "ground-07:service"]
+  },
+  {
+    "id": "ground-08",
+    "question": "After journal-0 moved to a different node, is its Bound data volume blocked on attachment to the new node or on mounting after attachment?",
+    "answerable": false,
+    "gold": [],
+    "partial": ["rb:k8s-pvc", "ground-08:reschedule", "ground-08:storage"],
+    "rationale": "The new pod was scheduled and references a Bound claim, but neither fact establishes attachment or mount status. ReadWriteOnce and a node change do not prove a stale attachment. A matching VolumeAttachment status, CSI or kubelet event, or equivalent storage trace is needed to locate the failure.",
+    "observations": [
+      {"id": "ground-08:reschedule", "text": "The prior journal-0 pod ran on data-a. The replacement has a different UID, PodScheduled=True on data-b, and has been in ContainerCreating for six minutes."},
+      {"id": "ground-08:storage", "text": "The replacement references journal-data, which is still Bound to the same attachable CSI volume with access mode ReadWriteOnce. The storage snapshot includes no attachment or mount status."},
+      {"id": "ground-08:node", "text": "data-b reports Ready and an unrelated stateless pod started there during the same minute."}
+    ],
+    "initial_ids": ["ground-08:reschedule", "rb:k8s-debug-init", "ground-08:node", "rb:k8s-pvc", "ground-08:storage"]
+  },
+  {
+    "id": "ground-09",
+    "question": "When spooler scaled from four to eight replicas, did its CPU metric recommend exactly eight, or did the HPA cap a higher recommendation at eight?",
+    "answerable": false,
+    "gold": [],
+    "partial": ["rb:k8s-hpa", "ground-09:timeline", "ground-09:config"],
+    "rationale": "Eight is both the applied count and the configured ceiling. With the starting count below that ceiling, the CPU calculation could have recommended exactly eight or more than eight. The runbook describes the calculation, but the metric samples or pre-limit recommendation from that reconciliation are missing.",
+    "observations": [
+      {"id": "ground-09:timeline", "text": "At 12:03 spooler had four Ready replicas immediately before an audit event shows the HPA controller writing replicas=8 to the Deployment scale subresource."},
+      {"id": "ground-09:config", "text": "The HPA's sole metric was CPU utilization with a 60% target. maxReplicas was 8; scale-up stabilization was disabled and the configured scale-up rate limit permitted more than eight replicas from the starting count. No status or metric snapshot was saved from that reconciliation."},
+      {"id": "ground-09:dashboard", "text": "The operations chart shows CPU rising around 12:03, but its 15-minute buckets straddle the scale-up and do not preserve the controller's per-pod input samples."}
+    ],
+    "initial_ids": ["ground-09:timeline", "rb:k8s-resources", "ground-09:dashboard", "ground-09:config", "rb:k8s-hpa"]
+  },
+  {
+    "id": "ground-10",
+    "question": "At 10:42, did the new tariff pods count as zero available because they were not Ready, or because they had not been Ready for the required 120 seconds?",
+    "answerable": false,
+    "gold": [],
+    "partial": ["rb:k8s-probes", "ground-10:rollout", "ground-10:events"],
+    "rationale": "Zero available replicas and a 120-second minimum do not distinguish failing readiness from recently achieved readiness. A transient probe failure earlier in startup does not establish the pod conditions at 10:42. The missing evidence is the Ready state and transition time for the new pods at the time of the sample.",
+    "observations": [
+      {"id": "ground-10:rollout", "text": "The tariff Deployment had minReadySeconds: 120. At 10:42 its new ReplicaSet showed three created replicas and zero available replicas; the export did not retain readyReplicas or pod conditions."},
+      {"id": "ground-10:events", "text": "A sampled startup event at 10:39 shows one of the three new pods returning HTTP 503 to a readiness check. No later probe results or Ready transitions were retained for that revision."},
+      {"id": "ground-10:later", "text": "At 10:48 the new ReplicaSet showed three available replicas. The later record has no Ready transition timestamps for the individual pods."}
+    ],
+    "initial_ids": ["rb:k8s-rollout", "ground-10:rollout", "ground-10:later", "rb:k8s-probes", "ground-10:events"]
+  }
+]

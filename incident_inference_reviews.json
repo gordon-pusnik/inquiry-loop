@@ -1,0 +1,874 @@
+[
+  {
+    "run_id": "2296889dac28445a8cad896867a728cc",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The Service inventory directly rules out a checkout-local ledger."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The lookups show the failure and qualified success; the inventory establishes the missing local Service."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The runbook explains short-name scope; the incident lookups and inventory establish its effect here."
+      }
+    ],
+    "note": "Identifies the namespace mismatch, but splits the evidence needed for its causal claims."
+  },
+  {
+    "run_id": "abc05c8637c142c0bb9bf2250817970b",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The Service inventory directly rules out a checkout-local ledger."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The lookups show the failure and qualified success; the inventory establishes the missing local Service."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The runbook explains short-name scope; the incident lookups and inventory establish its effect here."
+      }
+    ],
+    "note": "Identifies the namespace mismatch, but splits the evidence needed for its causal claims."
+  },
+  {
+    "run_id": "462d50321599445a844ba5283f8ce202",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "Inventory shows ledger only in finance; it does not show how the client scoped the failed lookup."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": false,
+        "note": "The lookup shows no such host, but nonresolution restates the symptom rather than explaining it."
+      }
+    ],
+    "note": "Gets the local-Service cause right, but omits the search-path evidence and adds a circular explanation."
+  },
+  {
+    "run_id": "da08add7863249bb9d0b37c8d9b3c383",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "Inventory shows ledger only in finance; it does not show how the client scoped the failed lookup."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": false,
+        "note": "The lookup shows no such host, but nonresolution restates the symptom rather than explaining it."
+      }
+    ],
+    "note": "Gets the local-Service cause right, but omits the search-path evidence and adds a circular explanation."
+  },
+  {
+    "run_id": "b70060fa0b9b488e8d0b04c267044ff2",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The config and lookup tie the changed hostname to NXDOMAIN from the affected worker."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The failed lookup is real, but the cited controls work and do not point to a Service or DNS configuration fault."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The runbook explains short-name expansion; this hostname already explicitly names the wrong namespace."
+      }
+    ],
+    "note": "Finds the failing configured name, then misattributes the failure to DNS expansion."
+  },
+  {
+    "run_id": "5153fa53517b47019357f934114d360b",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The config and lookup tie the changed hostname to NXDOMAIN from the affected worker."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The failed lookup is real, but the cited controls work and do not point to a Service or DNS configuration fault."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The runbook explains short-name expansion; this hostname already explicitly names the wrong namespace."
+      }
+    ],
+    "note": "Finds the failing configured name, then misattributes the failure to DNS expansion."
+  },
+  {
+    "run_id": "52ec783360b64192b90cacae415cfd3e",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The worker uses payment instead of payments; the correct name and DNS control both resolve."
+      }
+    ],
+    "note": "Correctly blames the worker configuration, though the answer leaves the namespace typo implicit."
+  },
+  {
+    "run_id": "59b061f085c94caa865d5fb0ccfce441",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The worker uses payment instead of payments; the correct name and DNS control both resolve."
+      }
+    ],
+    "note": "Correctly blames the worker configuration, though the answer leaves the namespace typo implicit."
+  },
+  {
+    "run_id": "48e0588efbcc4a1381fd4c588f7eeb78",
+    "claims": [],
+    "note": "Appropriate abstention. DNS query details would help; it omits the Service namespace and qualified/control lookups from the failing pod."
+  },
+  {
+    "run_id": "fce30c3b1e0844bc95a163c660dfa8fd",
+    "claims": [],
+    "note": "Appropriate abstention. DNS query details would help; it omits the Service namespace and qualified/control lookups from the failing pod."
+  },
+  {
+    "run_id": "273fe14c89534b14b6eb01a1bd96fe66",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The client error and generic DNS rule establish neither the Service namespace nor DNS health."
+      }
+    ],
+    "note": "Should abstain: the generic resolver error cannot distinguish namespace mismatch from DNS failure."
+  },
+  {
+    "run_id": "57741dec6b7143d89567612547e3f58a",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The client error and generic DNS rule establish neither the Service namespace nor DNS health."
+      }
+    ],
+    "note": "Should abstain: the generic resolver error cannot distinguish namespace mismatch from DNS failure."
+  },
+  {
+    "run_id": "d6f558e2b41c425e9c353e310a740c6f",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The Service excerpt shows the v1 selector and empty slice; the pod inventory establishes that no v1 pods exist."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The pods excerpt shows Ready v2 pods but not the selector needed to infer their exclusion."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The empty EndpointSlice confirms there are no selected backend destinations despite pod readiness."
+      }
+    ],
+    "note": "Correct selector-mismatch diagnosis, but neither mismatch claim cites both sides of the comparison."
+  },
+  {
+    "run_id": "c101e35c3f72446d88e36bfc776472fb",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The Service excerpt shows the v1 selector and empty slice; the pod inventory establishes that no v1 pods exist."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The pods excerpt shows Ready v2 pods but not the selector needed to infer their exclusion."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The empty EndpointSlice confirms there are no selected backend destinations despite pod readiness."
+      }
+    ],
+    "note": "Correct selector-mismatch diagnosis, but neither mismatch claim cites both sides of the comparison."
+  },
+  {
+    "run_id": "141d2bff9af648c1924b9dd530b46634",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "Together the citations show the v1 selector, Ready v2 quotes pods, and empty EndpointSlice."
+      }
+    ],
+    "note": "Directly explains why Ready pods are not backends."
+  },
+  {
+    "run_id": "709f4cb8d0a64d50aab28af8e5e6b422",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "Together the citations show the v1 selector, Ready v2 quotes pods, and empty EndpointSlice."
+      }
+    ],
+    "note": "Directly explains why Ready pods are not backends."
+  },
+  {
+    "run_id": "9aaca42a6aa64c52bcade65f13d5afcd",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": false,
+        "note": "Both ports are documented, but the frontend port can differ from the pod listener; this contrast is not diagnostic."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The Service targets 8081, where requests are refused; the app listens and responds on 8080 only."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "DNS resolves the Service name; the slice lists the right pod IP but the wrong backend port."
+      }
+    ],
+    "note": "Finds the targetPort mismatch but conflates the frontend port and endpoint routing with the cause and DNS."
+  },
+  {
+    "run_id": "7ac77c4a591b4644bceface0c9e3ae15",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": false,
+        "note": "Both ports are documented, but the frontend port can differ from the pod listener; this contrast is not diagnostic."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The Service targets 8081, where requests are refused; the app listens and responds on 8080 only."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "DNS resolves the Service name; the slice lists the right pod IP but the wrong backend port."
+      }
+    ],
+    "note": "Finds the targetPort mismatch but conflates the frontend port and endpoint routing with the cause and DNS."
+  },
+  {
+    "run_id": "768f47fa016246a086d2a92e5771926e",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The Service and direct tests isolate the failing 8081 target from the working 8080 listener."
+      }
+    ],
+    "note": "Correctly isolates the backend port mismatch."
+  },
+  {
+    "run_id": "511502e0bad54c4697b44f2583753925",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The Service and direct tests isolate the failing 8081 target from the working 8080 listener."
+      }
+    ],
+    "note": "Correctly isolates the backend port mismatch."
+  },
+  {
+    "run_id": "2785a8fd0dd6459499e6815ef16f3f9e",
+    "claims": [],
+    "note": "Correct abstention. Selector and targetPort are relevant, but pods are already known Ready; check EndpointSlices and the listener port."
+  },
+  {
+    "run_id": "cf76fcfdd01d44d68db3c8737a78213f",
+    "claims": [],
+    "note": "Correct abstention. Selector and targetPort are relevant, but pods are already known Ready; check EndpointSlices and the listener port."
+  },
+  {
+    "run_id": "1278c32e95ca4f1a89dd97122fc1ab92",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "DNS resolution and timeouts do not show empty endpoints; the runbook describes a check, not its result for search. A wrong port remains possible."
+      }
+    ],
+    "note": "Should have abstained: no EndpointSlice, selector, or port evidence distinguishes the alternatives."
+  },
+  {
+    "run_id": "ef5672fcc5e74f51a4d7273d0b64fa78",
+    "claims": [],
+    "note": "Correct abstention. Selector and port configuration are relevant; actual EndpointSlices and the pod listener would help distinguish the two causes."
+  },
+  {
+    "run_id": "4cfd2f8070f34f998861d99553d5a21e",
+    "claims": [],
+    "note": "Incorrect abstention. The scheduler explicitly names an unbound immediate PVC as the blocker, and the claim event identifies the missing class."
+  },
+  {
+    "run_id": "b03a65b5aa664ce99d359bf3a6c4d28b",
+    "claims": [],
+    "note": "Incorrect abstention. The scheduler explicitly names an unbound immediate PVC as the blocker, and the claim event identifies the missing class."
+  },
+  {
+    "run_id": "9bfaaa35b87e443ea9b2774be7540d68",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The FailedScheduling event explicitly gives unbound immediate PVCs as the blocker."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The claim is Pending and its event names the requested archive-ssd class as missing."
+      }
+    ],
+    "note": "Identifies the scheduling blocker and why the claim is still pending despite free worker capacity."
+  },
+  {
+    "run_id": "6ff98e521f974b34bec53c92894eb0d0",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The FailedScheduling event explicitly gives unbound immediate PVCs as the blocker."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The claim is Pending and its event names the requested archive-ssd class as missing."
+      }
+    ],
+    "note": "Identifies the scheduling blocker and why the claim is still pending despite free worker capacity."
+  },
+  {
+    "run_id": "1be839d45d22429da293ea3e32707c98",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "An empty PVC class disables dynamic provisioning, not static binding to a compatible PV. The actual mismatch is size."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The cited runbook allows automatic binding to matching PVs, and the claim record explicitly names import-pv."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The runbook's class requirement is for dynamic provisioning and does not explain this manual binding failure."
+      }
+    ],
+    "note": "Misses the binding blocker: the named 20Gi PV cannot satisfy the 50Gi request."
+  },
+  {
+    "run_id": "3c57733225e5478b90918762ed610233",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "An empty PVC class disables dynamic provisioning, not static binding to a compatible PV. The actual mismatch is size."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The cited runbook allows automatic binding to matching PVs, and the claim record explicitly names import-pv."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The runbook's class requirement is for dynamic provisioning and does not explain this manual binding failure."
+      }
+    ],
+    "note": "Misses the binding blocker: the named 20Gi PV cannot satisfy the 50Gi request."
+  },
+  {
+    "run_id": "0e5ddbe6cfad482c9261ab44b1553f64",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The cited claim documents the PVC class, not the PV class. The dynamic provisioning rule does not block matching classless static volumes."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The PV citation gives 20Gi and the runbook gives the size rule; only the uncited PVC observation confirms the 50Gi request."
+      }
+    ],
+    "note": "Finds the real size mismatch, but undercites it and adds a false storage-class explanation."
+  },
+  {
+    "run_id": "5530c08016e54e8880c7fc60926a7820",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The cited claim documents the PVC class, not the PV class. The dynamic provisioning rule does not block matching classless static volumes."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The PV citation gives 20Gi and the runbook gives the size rule; only the uncited PVC observation confirms the 50Gi request."
+      }
+    ],
+    "note": "Finds the real size mismatch, but undercites it and adds a false storage-class explanation."
+  },
+  {
+    "run_id": "13e64c36942048f99b7e33ef3ceb548f",
+    "claims": [],
+    "note": "Correct abstention, but restates the uncertainty without naming the missing binding mode, PVC events, or consumer scheduling status."
+  },
+  {
+    "run_id": "61fc1bfa0cfb4c3e95deeb1986778a79",
+    "claims": [],
+    "note": "Correct abstention, but restates the uncertainty without naming the missing binding mode, PVC events, or consumer scheduling status."
+  },
+  {
+    "run_id": "ffcf4d27eabe4d92b3f8f3508fffdc79",
+    "claims": [],
+    "note": "Correct abstention. StorageClass configuration is relevant; binding mode, PVC events, and consumer status are more diagnostic than matching PV inventory."
+  },
+  {
+    "run_id": "dd43ce62e9a04eb685f1c78121c6f10b",
+    "claims": [],
+    "note": "Correct abstention. StorageClass configuration is relevant; binding mode, PVC events, and consumer status are more diagnostic than matching PV inventory."
+  },
+  {
+    "run_id": "83bf2d68c22f4ed5b4758ecd7ffc0b6f",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The live worker lacks a CPU request; the runbook explains why this leaves CPU utilization undefined."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The cited spec describes workers generally; only the uncited HPA event identifies queue-worker-5fc specifically."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The HPA event reports both samples and the missing request; the runbook explains why usage alone cannot yield utilization."
+      }
+    ],
+    "note": "Correct diagnosis across overlapping claims; the pod-specific claim omits the citation that names the pod."
+  },
+  {
+    "run_id": "78afd2b5451442a682636afb177bd7ee",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The live worker lacks a CPU request; the runbook explains why this leaves CPU utilization undefined."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The cited spec describes workers generally; only the uncited HPA event identifies queue-worker-5fc specifically."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The HPA event reports both samples and the missing request; the runbook explains why usage alone cannot yield utilization."
+      }
+    ],
+    "note": "Correct diagnosis across overlapping claims; the pod-specific claim omits the citation that names the pod."
+  },
+  {
+    "run_id": "7c84eba200634512b16f1a36623bca8e",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The HPA event and live spec show the missing worker-container request; the runbook explains why utilization needs it."
+      }
+    ],
+    "note": "Correct and grounded; the pod-level wording is less precise than naming the worker container."
+  },
+  {
+    "run_id": "4777eeb32f614ec19f92674828af5784",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The HPA event and live spec pinpoint the missing worker-container request; the runbook explains why utilization needs it."
+      }
+    ],
+    "note": "Concise, correctly grounded diagnosis of unknown CPU utilization."
+  },
+  {
+    "run_id": "c7c927bc75d6413691ae4d4c667d2ed7",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The live specs show the new sidecar lacks a memory request; the HPA rule explains why pod-wide utilization cannot be calculated."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The runbooks explain how requests are used but do not show this sidecar's missing memory request."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The specs and rule explain undefined utilization, but the uncited HPA observation records the actual transition to <unknown>."
+      }
+    ],
+    "note": "Correct diagnosis repeated three times; only the first claim fully grounds what it asserts."
+  },
+  {
+    "run_id": "e9e45d60bdfa47339d2d41d919b591d0",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The eviction API explicitly cites the ingest disruption budget as the blocker."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The runbook's availability floor is the relevant mechanism: preserving healthy replicas can require refusing an eviction."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": false,
+        "note": "The runbook supports this generic drain behavior, but it adds no diagnosis of why this budget had no headroom."
+      }
+    ],
+    "note": "Identifies the immediate blocker but not the decisive count: three healthy replicas exactly meet minAvailable=3."
+  },
+  {
+    "run_id": "4eed655618f543f58c9f7ee503753158",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The budget shows the allowance dropping after stream-a; only the uncited drain record confirms stream-b's specific rejection."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The drain confirms stream-b was rejected, but the uncited budget record establishes that stream-a exhausted the allowance."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The stream budget shows one concurrent disruption allowed and the allowance falling to zero after the first eviction."
+      }
+    ],
+    "note": "Correct sequence, but the first two claims cite only complementary parts of the evidence. Does not mention the unready replacement."
+  },
+  {
+    "run_id": "04ed82cafcbd4406a479aba71ea0926b",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "PodInitializing is the app's waiting reason, not the pod status; repeating that label does not explain the wait."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": false,
+        "note": "The status shows the app's waiting reason during incomplete init, but the claim only restates the symptom."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "Init:CrashLoopBackOff and prepare-config's exit code 1 identify failed init as the app's immediate blocker."
+      }
+    ],
+    "note": "Only the third claim identifies the blocker. The unshown prior init log identifies the missing config file."
+  },
+  {
+    "run_id": "05f9995a5215407c923057b8e4317fde",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The status names the active init step, but the uncited logs show it actually polling for schema readiness."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The status shows wait-for-schema still running without restarts and the worker blocked on unfinished init."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The probe excerpt does not establish an incident probe failure; the actual blocker is init retrying an endpoint that returns 503."
+      }
+    ],
+    "note": "Identifies the running init blocker, but adds an ungrounded Kubernetes readiness-probe theory. The cause of the 503 is unknown."
+  },
+  {
+    "run_id": "2a446302d48342ccb07b5f660f9b0026",
+    "claims": [],
+    "note": "Appropriate abstention: exit code 1 cannot distinguish input-read from output-write failure. Correctly notes the lack of init logs or a specific error."
+  },
+  {
+    "run_id": "514b787cae5044469e96bb8b5ca685ae",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The live specs show the new sidecar lacks a memory request; the HPA rule explains why pod-wide utilization cannot be calculated."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The runbooks explain how requests are used but do not show this sidecar's missing memory request."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The specs and rule explain undefined utilization, but the uncited HPA observation records the actual transition to <unknown>."
+      }
+    ],
+    "note": "Correct diagnosis repeated three times; only the first claim fully grounds what it asserts."
+  },
+  {
+    "run_id": "401e40629c13484b9c10b9a822a29277",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The eviction API explicitly cites the ingest disruption budget as the blocker."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The runbook's availability floor is the relevant mechanism: preserving healthy replicas can require refusing an eviction."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": false,
+        "note": "The runbook supports this generic drain behavior, but it adds no diagnosis of why this budget had no headroom."
+      }
+    ],
+    "note": "Identifies the immediate blocker but not the decisive count: three healthy replicas exactly meet minAvailable=3."
+  },
+  {
+    "run_id": "ccccb1ab70704a2687fec41666b3d630",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The budget shows the allowance dropping after stream-a; only the uncited drain record confirms stream-b's specific rejection."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The drain confirms stream-b was rejected, but the uncited budget record establishes that stream-a exhausted the allowance."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The stream budget shows one concurrent disruption allowed and the allowance falling to zero after the first eviction."
+      }
+    ],
+    "note": "Correct sequence, but the first two claims cite only complementary parts of the evidence. Does not mention the unready replacement."
+  },
+  {
+    "run_id": "2f3043c391794e9e83dc22202db3af75",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "PodInitializing is the app's waiting reason, not the pod status; repeating that label does not explain the wait."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": false,
+        "note": "The status shows the app's waiting reason during incomplete init, but the claim only restates the symptom."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "Init:CrashLoopBackOff and prepare-config's exit code 1 identify failed init as the app's immediate blocker."
+      }
+    ],
+    "note": "Only the third claim identifies the blocker. The unshown prior init log identifies the missing config file."
+  },
+  {
+    "run_id": "0c32359b4bfd4128b287ec4b054b3d3e",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The status names the active init step, but the uncited logs show it actually polling for schema readiness."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The status shows wait-for-schema still running without restarts and the worker blocked on unfinished init."
+      },
+      {
+        "citation_supported": false,
+        "conclusion_correct": false,
+        "note": "The probe excerpt does not establish an incident probe failure; the actual blocker is init retrying an endpoint that returns 503."
+      }
+    ],
+    "note": "Identifies the running init blocker, but adds an ungrounded Kubernetes readiness-probe theory. The cause of the 503 is unknown."
+  },
+  {
+    "run_id": "762aeee476ec448eb8ac4e9f3fd92434",
+    "claims": [],
+    "note": "Appropriate abstention: exit code 1 cannot distinguish input-read from output-write failure. Correctly notes the lack of init logs or a specific error."
+  },
+  {
+    "run_id": "ef4e60377b544407b046c4e4c213791a",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The HPA observation and rule show the symptom and mechanism, but not the sidecar's missing request; the live specs do."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "For pod-wide Resource AverageUtilization, the runbook ties memory usage to container requests; this explains why the sidecar request matters."
+      }
+    ],
+    "note": "Correct cause, but the incident-specific claim omits the passage that shows the missing request."
+  },
+  {
+    "run_id": "75ab4febc73342d9800cdb3e271d3b52",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The eviction API explicitly cites the ingest disruption budget as the blocker."
+      }
+    ],
+    "note": "Correct immediate diagnosis; does not explain that three healthy replicas exactly meet minAvailable=3."
+  },
+  {
+    "run_id": "dce307258f234d3f9e4530a5d0768d30",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The drain records stream-a's successful eviction, and the budget shows one disruption was available beforehand."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The drain records stream-b's PDB rejection, and the budget records the drop from one allowed disruption to zero."
+      }
+    ],
+    "note": "Both steps are grounded in the drain and budget records. The replacement's lack of readiness is left implicit."
+  },
+  {
+    "run_id": "40a39ed92f424b3385fb0956e3d4a727",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "Failed init is the right blocker, but the pod status is Init:CrashLoopBackOff; PodInitializing is the app's waiting reason."
+      }
+    ],
+    "note": "Correct immediate cause despite the status mix-up; does not identify the missing config file shown in the unprovided log."
+  },
+  {
+    "run_id": "19b5a679405540039b4dc668ce439a69",
+    "claims": [],
+    "note": "Inappropriate abstention: status already identifies the unfinished init step. Its logs, not the worker's probes, would show the schema endpoint returning 503."
+  },
+  {
+    "run_id": "785fa9bbe4f749a097300155b7a7bbfe",
+    "claims": [],
+    "note": "Appropriate abstention. The logs from a failed prepare-data attempt could distinguish the two operations; exit code 1 cannot."
+  },
+  {
+    "run_id": "6f8658da628947b683b2d503779288fa",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "The HPA observation and rule show the symptom and mechanism, but not the sidecar's missing request; the live specs do."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "For pod-wide Resource AverageUtilization, the runbook ties memory usage to container requests; this explains why the sidecar request matters."
+      }
+    ],
+    "note": "Correct cause, but the incident-specific claim omits the passage that shows the missing request."
+  },
+  {
+    "run_id": "8a649a6ddf8d4a2687fe856185b53051",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The eviction API explicitly cites the ingest disruption budget as the blocker."
+      }
+    ],
+    "note": "Correct immediate diagnosis; does not explain that three healthy replicas exactly meet minAvailable=3."
+  },
+  {
+    "run_id": "9c1ca4d87de74b909793ab51d4d1ed57",
+    "claims": [
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The drain records stream-a's successful eviction, and the budget shows one disruption was available beforehand."
+      },
+      {
+        "citation_supported": true,
+        "conclusion_correct": true,
+        "note": "The drain records stream-b's PDB rejection, and the budget records the drop from one allowed disruption to zero."
+      }
+    ],
+    "note": "Both steps are grounded in the drain and budget records. The replacement's lack of readiness is left implicit."
+  },
+  {
+    "run_id": "088c26e4d9d347c8b88d54f70fd5bf13",
+    "claims": [
+      {
+        "citation_supported": false,
+        "conclusion_correct": true,
+        "note": "Failed init is the right blocker, but the pod status is Init:CrashLoopBackOff; PodInitializing is the app's waiting reason."
+      }
+    ],
+    "note": "Correct immediate cause despite the status mix-up; does not identify the missing config file shown in the unprovided log."
+  },
+  {
+    "run_id": "5ab1ccda776d4ce3924e7763bfcf6248",
+    "claims": [],
+    "note": "Inappropriate abstention: status already identifies the unfinished init step. Its logs, not probe or resource data, are the next evidence for why it has not finished."
+  },
+  {
+    "run_id": "0372a8f58a184c488dbab00197b1fead",
+    "claims": [],
+    "note": "Appropriate abstention. The logs from a failed prepare-data attempt could distinguish the two operations; exit code 1 cannot."
+  }
+]

@@ -1,0 +1,1505 @@
+{
+  "schema_version": 1,
+  "model": "gpt-4o-mini-2024-07-18",
+  "settings": {
+    "temperature": 0,
+    "max_completion_tokens": 512,
+    "response_format": {
+      "type": "json_object"
+    }
+  },
+  "fixture_sha256": {
+    "incident_grounding_cases.json": "11f0acce5ac5e693da526a1d9fcdc88e62e541fc63797bd8045b28fd974716c8",
+    "incident_runbooks.json": "eac6de24f6f4de1e77f637aba9cc52a0d2d8a0d78c8928b437acc22e73533290"
+  },
+  "pricing": {
+    "usd_per_million_tokens": {
+      "input": 0.15,
+      "cached_input": 0.075,
+      "output": 0.6
+    },
+    "source": "https://developers.openai.com/api/docs/models/gpt-4o-mini"
+  },
+  "modes": {
+    "fixed": "fixed",
+    "diagnostic": "verified"
+  },
+  "runs": [
+    {
+      "case_id": "ground-01",
+      "mode": "fixed",
+      "run_id": "9e75c6bbcdcc46b698cf2b1219508773",
+      "answerable": true,
+      "gold_in_packet": true,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-01:slices",
+              "ground-01:proxy"
+            ],
+            "claim": "The request to parcel-api timed out on worker-east because there were no local endpoints available for the NodePort service."
+          },
+          {
+            "citations": [
+              "ground-01:slices"
+            ],
+            "claim": "The request to parcel-api succeeded on worker-west because it had local endpoints available."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-01:service",
+        "ground-01:health",
+        "rb:k8s-service",
+        "ground-01:slices",
+        "ground-01:proxy"
+      ],
+      "verification": null,
+      "draft_replayed": false,
+      "elapsed_seconds": 2.7731549580348656,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.00021959999999999997
+    },
+    {
+      "case_id": "ground-01",
+      "mode": "diagnostic",
+      "run_id": "42b23750435c452884b7f0d1b5c2bc8c",
+      "answerable": true,
+      "gold_in_packet": true,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-01:slices",
+              "ground-01:proxy"
+            ],
+            "claim": "The request to parcel-api timed out on worker-east because there were no local endpoints available for the NodePort service."
+          },
+          {
+            "citations": [
+              "ground-01:slices"
+            ],
+            "claim": "The request to parcel-api succeeded on worker-west because it had local endpoints available."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-01:service",
+        "ground-01:health",
+        "rb:k8s-service",
+        "ground-01:slices",
+        "ground-01:proxy"
+      ],
+      "verification": {
+        "decisions": [
+          {
+            "claim_id": "claim-1",
+            "decision": "retain",
+            "reason": "The packet trace for worker-east indicates that the request was dropped due to no local endpoints available."
+          },
+          {
+            "claim_id": "claim-2",
+            "decision": "retain",
+            "reason": "The EndpointSlices show that worker-west had local endpoints available for the parcel-api."
+          }
+        ],
+        "status": "diagnosed",
+        "initial_claims": 2,
+        "retained_claims": 2,
+        "dropped_claims": 0
+      },
+      "draft_replayed": true,
+      "elapsed_seconds": 5.893453582946677,
+      "verifier_seconds": 3.1130997499567457,
+      "estimated_cost_usd": 0.00043065
+    },
+    {
+      "case_id": "ground-02",
+      "mode": "fixed",
+      "run_id": "9efe3dfe250e44609738b36a4060c127",
+      "answerable": true,
+      "gold_in_packet": false,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-02:claim"
+            ],
+            "claim": "map-cache-0 cannot schedule because its pre-bound claim is already Bound to a specific PersistentVolume."
+          },
+          {
+            "citations": [
+              "ground-02:status",
+              "ground-02:placement"
+            ],
+            "claim": "The pod remains Pending with no spec.nodeName, indicating it has not been scheduled despite the eligible GPU node having capacity."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "rb:k8s-pvc",
+        "ground-02:status",
+        "ground-02:placement",
+        "rb:k8s-resources",
+        "ground-02:claim"
+      ],
+      "verification": null,
+      "draft_replayed": false,
+      "elapsed_seconds": 1.9791001669946127,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.00024195
+    },
+    {
+      "case_id": "ground-02",
+      "mode": "diagnostic",
+      "run_id": "9ac2e22da5a44d70b20ab2779b9e740d",
+      "answerable": true,
+      "gold_in_packet": false,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-02:claim"
+            ],
+            "claim": "map-cache-0 cannot schedule because its pre-bound claim is already Bound to a specific PersistentVolume."
+          },
+          {
+            "citations": [
+              "ground-02:status",
+              "ground-02:placement"
+            ],
+            "claim": "The pod remains Pending with no spec.nodeName, indicating it has not been scheduled despite the eligible GPU node having capacity."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "rb:k8s-pvc",
+        "ground-02:status",
+        "ground-02:placement",
+        "rb:k8s-resources",
+        "ground-02:claim"
+      ],
+      "verification": {
+        "decisions": [
+          {
+            "claim_id": "claim-1",
+            "decision": "retain",
+            "reason": "The claim is supported by the passage stating that the PVC is Bound to a specific PV."
+          },
+          {
+            "claim_id": "claim-2",
+            "decision": "retain",
+            "reason": "The claim is supported by the passage indicating the pod remains Pending with no spec.nodeName."
+          }
+        ],
+        "status": "diagnosed",
+        "initial_claims": 2,
+        "retained_claims": 2,
+        "dropped_claims": 0
+      },
+      "draft_replayed": true,
+      "elapsed_seconds": 5.09039233304793,
+      "verifier_seconds": 3.101210416003596,
+      "estimated_cost_usd": 0.00046185
+    },
+    {
+      "case_id": "ground-03",
+      "mode": "fixed",
+      "run_id": "bfe33716b2e4498398cf309da14520af",
+      "answerable": true,
+      "gold_in_packet": true,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-03:decision",
+              "ground-03:metric"
+            ],
+            "claim": "The HPA recommended increasing replicas from four to six because the average CPU usage across the four replicas was 450m, which exceeded the target average value of 300m."
+          },
+          {
+            "citations": [
+              "ground-03:dashboard",
+              "rb:k8s-hpa"
+            ],
+            "claim": "The CPU utilization percentage was calculated as 15%, indicating that the current usage was significantly below the requested CPU, prompting the HPA to scale up."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-03:dashboard",
+        "rb:k8s-resources",
+        "ground-03:decision",
+        "rb:k8s-hpa",
+        "ground-03:metric"
+      ],
+      "verification": null,
+      "draft_replayed": false,
+      "elapsed_seconds": 2.6529418749851175,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.000267
+    },
+    {
+      "case_id": "ground-03",
+      "mode": "diagnostic",
+      "run_id": "62fc7e5052bc467c8d140c324b2d0bc5",
+      "answerable": true,
+      "gold_in_packet": true,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-03:decision",
+              "ground-03:metric"
+            ],
+            "claim": "The HPA recommended increasing replicas from four to six because the average CPU usage across the four replicas was 450m, which exceeded the target average value of 300m."
+          },
+          {
+            "citations": [
+              "ground-03:dashboard",
+              "rb:k8s-hpa"
+            ],
+            "claim": "The CPU utilization percentage was calculated as 15%, indicating that the current usage was significantly below the requested CPU, prompting the HPA to scale up."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-03:dashboard",
+        "rb:k8s-resources",
+        "ground-03:decision",
+        "rb:k8s-hpa",
+        "ground-03:metric"
+      ],
+      "verification": {
+        "decisions": [
+          {
+            "claim_id": "claim-1",
+            "decision": "retain",
+            "reason": "The claim is supported by the passage stating that the HPA recorded an average CPU usage of 450m, which exceeds the target average value of 300m."
+          },
+          {
+            "claim_id": "claim-2",
+            "decision": "retain",
+            "reason": "The claim is supported by the passage indicating that the CPU utilization percentage was calculated as 15%, which is significantly below the requested CPU."
+          }
+        ],
+        "status": "diagnosed",
+        "initial_claims": 2,
+        "retained_claims": 2,
+        "dropped_claims": 0
+      },
+      "draft_replayed": true,
+      "elapsed_seconds": 6.852156792068854,
+      "verifier_seconds": 4.196788667002693,
+      "estimated_cost_usd": 0.0005986499999999999
+    },
+    {
+      "case_id": "ground-04",
+      "mode": "fixed",
+      "run_id": "2084f21589bb4e23850c8e91b0f21863",
+      "answerable": true,
+      "gold_in_packet": true,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-04:history",
+              "ground-04:controller"
+            ],
+            "claim": "The new mosaic image never got a ReplicaSet because the Deployment was paused at generation 17 and did not resume."
+          },
+          {
+            "citations": [
+              "rb:k8s-rollout"
+            ],
+            "claim": "The Deployment deadline does not automatically roll back the Deployment; it only reports a status condition indicating that progress has stalled."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-04:alert",
+        "rb:k8s-rollout",
+        "ground-04:history",
+        "rb:k8s-probes",
+        "ground-04:controller"
+      ],
+      "verification": null,
+      "draft_replayed": false,
+      "elapsed_seconds": 2.6306897499598563,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.00024615
+    },
+    {
+      "case_id": "ground-04",
+      "mode": "diagnostic",
+      "run_id": "53a72dda9d4b4487a482b8b434aa0ab2",
+      "answerable": true,
+      "gold_in_packet": true,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-04:history",
+              "ground-04:controller"
+            ],
+            "claim": "The new mosaic image never got a ReplicaSet because the Deployment was paused at generation 17 and did not resume."
+          },
+          {
+            "citations": [
+              "rb:k8s-rollout"
+            ],
+            "claim": "The Deployment deadline does not automatically roll back the Deployment; it only reports a status condition indicating that progress has stalled."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-04:alert",
+        "rb:k8s-rollout",
+        "ground-04:history",
+        "rb:k8s-probes",
+        "ground-04:controller"
+      ],
+      "verification": {
+        "decisions": [
+          {
+            "claim_id": "claim-1",
+            "decision": "retain",
+            "reason": "The claim is supported by the passage stating that the Deployment was paused at generation 17 and did not resume, which explains why the new mosaic image never got a ReplicaSet."
+          },
+          {
+            "claim_id": "claim-2",
+            "decision": "retain",
+            "reason": "The claim is supported by the passage indicating that the Deployment deadline does not automatically roll back the Deployment; it only reports a status condition indicating that progress has stalled."
+          }
+        ],
+        "status": "diagnosed",
+        "initial_claims": 2,
+        "retained_claims": 2,
+        "dropped_claims": 0
+      },
+      "draft_replayed": true,
+      "elapsed_seconds": 6.242886248975992,
+      "verifier_seconds": 3.6122981660300866,
+      "estimated_cost_usd": 0.00053535
+    },
+    {
+      "case_id": "ground-05",
+      "mode": "fixed",
+      "run_id": "e80bca3e31ac490fa90981574d85f499",
+      "answerable": true,
+      "gold_in_packet": true,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-05:calendar",
+              "ground-05:budget",
+              "ground-05:audit"
+            ],
+            "claim": "Receipt-1 was deleted during a maintenance window due to a successful DELETE API request, despite its disruption budget allowing zero evictions."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-05:calendar",
+        "rb:k8s-eviction",
+        "ground-05:budget",
+        "rb:k8s-pdb",
+        "ground-05:audit"
+      ],
+      "verification": null,
+      "draft_replayed": false,
+      "elapsed_seconds": 1.4794345420086756,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.00021555
+    },
+    {
+      "case_id": "ground-05",
+      "mode": "diagnostic",
+      "run_id": "69e909e7b3454f469df0cf378004a2e4",
+      "answerable": true,
+      "gold_in_packet": true,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-05:calendar",
+              "ground-05:budget",
+              "ground-05:audit"
+            ],
+            "claim": "Receipt-1 was deleted during a maintenance window due to a successful DELETE API request, despite its disruption budget allowing zero evictions."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-05:calendar",
+        "rb:k8s-eviction",
+        "ground-05:budget",
+        "rb:k8s-pdb",
+        "ground-05:audit"
+      ],
+      "verification": {
+        "decisions": [
+          {
+            "claim_id": "claim-1",
+            "decision": "retain",
+            "reason": "The claim is supported by the audit response indicating a successful DELETE API request for receipt-1, despite the disruption budget allowing zero evictions."
+          }
+        ],
+        "status": "diagnosed",
+        "initial_claims": 1,
+        "retained_claims": 1,
+        "dropped_claims": 0
+      },
+      "draft_replayed": true,
+      "elapsed_seconds": 4.149973999941722,
+      "verifier_seconds": 2.669790791987907,
+      "estimated_cost_usd": 0.0003855
+    },
+    {
+      "case_id": "ground-06",
+      "mode": "fixed",
+      "run_id": "118ef9be2cc3433db0b34362bc664f41",
+      "answerable": true,
+      "gold_in_packet": true,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-06:statuses"
+            ],
+            "claim": "The invoice gateway is not ready because it has a CreateContainerConfigError, preventing it from starting."
+          },
+          {
+            "citations": [
+              "ground-06:probe"
+            ],
+            "claim": "The readiness probe has not run yet, as indicated by the absence of probe samples for the current pod UID."
+          },
+          {
+            "citations": [
+              "ground-06:config"
+            ],
+            "claim": "The gateway is unable to find the required key 'region' in the Secret 'billing/invoice-settings', which may contribute to the CreateContainerConfigError."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-06:probe",
+        "rb:k8s-debug-init",
+        "ground-06:config",
+        "rb:k8s-probes",
+        "ground-06:statuses"
+      ],
+      "verification": null,
+      "draft_replayed": false,
+      "elapsed_seconds": 2.8298252079985105,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.0002739
+    },
+    {
+      "case_id": "ground-06",
+      "mode": "diagnostic",
+      "run_id": "bb95e190c8ef486e90f4dd640330d70f",
+      "answerable": true,
+      "gold_in_packet": true,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-06:statuses"
+            ],
+            "claim": "The invoice gateway is not ready because it has a CreateContainerConfigError, preventing it from starting."
+          },
+          {
+            "citations": [
+              "ground-06:probe"
+            ],
+            "claim": "The readiness probe has not run yet, as indicated by the absence of probe samples for the current pod UID."
+          },
+          {
+            "citations": [
+              "ground-06:config"
+            ],
+            "claim": "The gateway is unable to find the required key 'region' in the Secret 'billing/invoice-settings', which may contribute to the CreateContainerConfigError."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-06:probe",
+        "rb:k8s-debug-init",
+        "ground-06:config",
+        "rb:k8s-probes",
+        "ground-06:statuses"
+      ],
+      "verification": {
+        "decisions": [
+          {
+            "claim_id": "claim-1",
+            "decision": "retain",
+            "reason": "The CreateContainerConfigError is explicitly mentioned in the passage, indicating the invoice gateway is not ready."
+          },
+          {
+            "claim_id": "claim-2",
+            "decision": "retain",
+            "reason": "The absence of probe samples for the current pod UID confirms that the readiness probe has not run yet."
+          },
+          {
+            "claim_id": "claim-3",
+            "decision": "retain",
+            "reason": "The inability to find the required key 'region' in the Secret is directly supported by the passage, linking it to the CreateContainerConfigError."
+          }
+        ],
+        "status": "diagnosed",
+        "initial_claims": 3,
+        "retained_claims": 3,
+        "dropped_claims": 0
+      },
+      "draft_replayed": true,
+      "elapsed_seconds": 7.496902541897725,
+      "verifier_seconds": 4.662065915996209,
+      "estimated_cost_usd": 0.0005688
+    },
+    {
+      "case_id": "ground-07",
+      "mode": "fixed",
+      "run_id": "64cfdcb1e0494c17a6bc21046c536884",
+      "answerable": false,
+      "gold_in_packet": null,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-07:external",
+              "ground-07:service"
+            ],
+            "claim": "The external NodePort request to dispatch-api timed out on edge-b because Local policy left that node without a backend."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-07:external",
+        "rb:k8s-service",
+        "ground-07:internal",
+        "rb:k8s-dns",
+        "ground-07:service"
+      ],
+      "verification": null,
+      "draft_replayed": false,
+      "elapsed_seconds": 1.3157206670148298,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.00023939999999999996
+    },
+    {
+      "case_id": "ground-07",
+      "mode": "diagnostic",
+      "run_id": "41cd447143604d52afd579e7426169ec",
+      "answerable": false,
+      "gold_in_packet": null,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-07:external",
+              "ground-07:service"
+            ],
+            "claim": "The external NodePort request to dispatch-api timed out on edge-b because Local policy left that node without a backend."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-07:external",
+        "rb:k8s-service",
+        "ground-07:internal",
+        "rb:k8s-dns",
+        "ground-07:service"
+      ],
+      "verification": {
+        "decisions": [
+          {
+            "claim_id": "claim-1",
+            "decision": "retain",
+            "reason": "The claim is supported by the evidence that indicates a TCP connect timeout at edge-b, suggesting that the request did not reach edge-b due to the local policy."
+          }
+        ],
+        "status": "diagnosed",
+        "initial_claims": 1,
+        "retained_claims": 1,
+        "dropped_claims": 0
+      },
+      "draft_replayed": true,
+      "elapsed_seconds": 3.798454415926244,
+      "verifier_seconds": 2.4793434589519165,
+      "estimated_cost_usd": 0.0004032
+    },
+    {
+      "case_id": "ground-08",
+      "mode": "fixed",
+      "run_id": "2a18b680d7a04a4d803e5c924d83118d",
+      "answerable": false,
+      "gold_in_packet": null,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-08:storage"
+            ],
+            "claim": "The Bound data volume is blocked on mounting after attachment."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-08:reschedule",
+        "rb:k8s-debug-init",
+        "ground-08:node",
+        "rb:k8s-pvc",
+        "ground-08:storage"
+      ],
+      "verification": null,
+      "draft_replayed": false,
+      "elapsed_seconds": 1.4205300000030547,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.0002148
+    },
+    {
+      "case_id": "ground-08",
+      "mode": "diagnostic",
+      "run_id": "a7eee54301e94be5b1dc440cb386e832",
+      "answerable": false,
+      "gold_in_packet": null,
+      "answer": {
+        "conclusions": [],
+        "missing_evidence": "Specific information on the attachment and mounting status of the Bound data volume after moving to a different node.",
+        "status": "insufficient"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-08:reschedule",
+        "rb:k8s-debug-init",
+        "ground-08:node",
+        "rb:k8s-pvc",
+        "ground-08:storage"
+      ],
+      "verification": {
+        "decisions": [
+          {
+            "claim_id": "claim-1",
+            "decision": "drop",
+            "reason": "The cited passage does not support the claim that the Bound data volume is blocked on mounting after attachment, as it only states the volume is still Bound and does not provide information on its status."
+          }
+        ],
+        "status": "insufficient",
+        "initial_claims": 1,
+        "retained_claims": 0,
+        "dropped_claims": 1
+      },
+      "draft_replayed": true,
+      "elapsed_seconds": 3.0600380009855144,
+      "verifier_seconds": 1.6386057080235332,
+      "estimated_cost_usd": 0.00034785
+    },
+    {
+      "case_id": "ground-09",
+      "mode": "fixed",
+      "run_id": "c3d87d7ab542467581ab65b2c0a35374",
+      "answerable": false,
+      "gold_in_packet": null,
+      "answer": {
+        "conclusions": [],
+        "missing_evidence": "It is unclear whether the CPU metric recommended exactly eight replicas or if the HPA capped a higher recommendation at eight, as there is no specific data on the CPU metric values before the scaling event.",
+        "status": "insufficient"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-09:timeline",
+        "rb:k8s-resources",
+        "ground-09:dashboard",
+        "ground-09:config",
+        "rb:k8s-hpa"
+      ],
+      "verification": null,
+      "draft_replayed": false,
+      "elapsed_seconds": 1.7687804999877699,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.00021344999999999998
+    },
+    {
+      "case_id": "ground-09",
+      "mode": "diagnostic",
+      "run_id": "7eb4533a004c49f787ccdfc79086b276",
+      "answerable": false,
+      "gold_in_packet": null,
+      "answer": {
+        "conclusions": [],
+        "missing_evidence": "It is unclear whether the CPU metric recommended exactly eight replicas or if the HPA capped a higher recommendation at eight, as there is no specific data on the CPU metric values before the scaling event.",
+        "status": "insufficient"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "ground-09:timeline",
+        "rb:k8s-resources",
+        "ground-09:dashboard",
+        "ground-09:config",
+        "rb:k8s-hpa"
+      ],
+      "verification": null,
+      "draft_replayed": true,
+      "elapsed_seconds": 1.7686157929711044,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.00021344999999999998
+    },
+    {
+      "case_id": "ground-10",
+      "mode": "fixed",
+      "run_id": "495e465ddd06490f823e74c69b0552af",
+      "answerable": false,
+      "gold_in_packet": null,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-10:rollout",
+              "rb:k8s-probes"
+            ],
+            "claim": "The new tariff pods counted as zero available because they had not been Ready for the required 120 seconds."
+          },
+          {
+            "citations": [
+              "ground-10:events"
+            ],
+            "claim": "At 10:39, one of the new pods returned HTTP 503 to a readiness check, indicating it was not ready."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "rb:k8s-rollout",
+        "ground-10:rollout",
+        "ground-10:later",
+        "rb:k8s-probes",
+        "ground-10:events"
+      ],
+      "verification": null,
+      "draft_replayed": false,
+      "elapsed_seconds": 2.9480419579776935,
+      "verifier_seconds": null,
+      "estimated_cost_usd": 0.0002475
+    },
+    {
+      "case_id": "ground-10",
+      "mode": "diagnostic",
+      "run_id": "15a845a2561e44e5bdd2d3a8fa939b57",
+      "answerable": false,
+      "gold_in_packet": null,
+      "answer": {
+        "conclusions": [
+          {
+            "citations": [
+              "ground-10:rollout",
+              "rb:k8s-probes"
+            ],
+            "claim": "The new tariff pods counted as zero available because they had not been Ready for the required 120 seconds."
+          },
+          {
+            "citations": [
+              "ground-10:events"
+            ],
+            "claim": "At 10:39, one of the new pods returned HTTP 503 to a readiness check, indicating it was not ready."
+          }
+        ],
+        "missing_evidence": null,
+        "status": "diagnosed"
+      },
+      "run_status": "completed",
+      "initial_ids": [
+        "rb:k8s-rollout",
+        "ground-10:rollout",
+        "ground-10:later",
+        "rb:k8s-probes",
+        "ground-10:events"
+      ],
+      "verification": {
+        "decisions": [
+          {
+            "claim_id": "claim-1",
+            "decision": "retain",
+            "reason": "The claim is supported by the passage stating that the Deployment had minReadySeconds: 120 and that at 10:42, the new ReplicaSet showed zero available replicas."
+          },
+          {
+            "claim_id": "claim-2",
+            "decision": "retain",
+            "reason": "The claim is supported by the passage indicating that at 10:39, one of the new pods returned HTTP 503 to a readiness check, confirming it was not ready."
+          }
+        ],
+        "status": "diagnosed",
+        "initial_claims": 2,
+        "retained_claims": 2,
+        "dropped_claims": 0
+      },
+      "draft_replayed": true,
+      "elapsed_seconds": 6.226252624997869,
+      "verifier_seconds": 3.266502541024238,
+      "estimated_cost_usd": 0.0005457
+    }
+  ],
+  "grades": {
+    "arms": {
+      "fixed": {
+        "runs": 10,
+        "answerable_runs": 6,
+        "completed_runs": 10,
+        "zero_conclusion_runs": 1,
+        "conclusions": 16,
+        "citation_support": {
+          "count": 9,
+          "denominator": 16,
+          "rate": 0.5625
+        },
+        "conclusion_correctness": {
+          "count": 9,
+          "denominator": 16,
+          "rate": 0.5625
+        },
+        "abstention_correctness": {
+          "count": 7,
+          "denominator": 10,
+          "rate": 0.7
+        },
+        "inappropriate_abstention": {
+          "count": 0,
+          "denominator": 6,
+          "rate": 0.0
+        },
+        "failure": {
+          "count": 0,
+          "denominator": 10,
+          "rate": 0.0
+        },
+        "coverage": {
+          "count": 9,
+          "denominator": 10,
+          "rate": 0.9
+        },
+        "full_correct": {
+          "count": 3,
+          "denominator": 10,
+          "rate": 0.3
+        },
+        "unsupported_conclusions": 7,
+        "median_elapsed_seconds": 2.3048949584772345,
+        "estimated_cost_usd": 0.0023793,
+        "cost_samples": 10
+      },
+      "diagnostic": {
+        "runs": 10,
+        "answerable_runs": 6,
+        "completed_runs": 10,
+        "zero_conclusion_runs": 2,
+        "conclusions": 15,
+        "citation_support": {
+          "count": 9,
+          "denominator": 15,
+          "rate": 0.6
+        },
+        "conclusion_correctness": {
+          "count": 9,
+          "denominator": 15,
+          "rate": 0.6
+        },
+        "abstention_correctness": {
+          "count": 8,
+          "denominator": 10,
+          "rate": 0.8
+        },
+        "inappropriate_abstention": {
+          "count": 0,
+          "denominator": 6,
+          "rate": 0.0
+        },
+        "failure": {
+          "count": 0,
+          "denominator": 10,
+          "rate": 0.0
+        },
+        "coverage": {
+          "count": 8,
+          "denominator": 10,
+          "rate": 0.8
+        },
+        "full_correct": {
+          "count": 4,
+          "denominator": 10,
+          "rate": 0.4
+        },
+        "unsupported_conclusions": 6,
+        "median_elapsed_seconds": 5.4919229579973035,
+        "estimated_cost_usd": 0.004491,
+        "cost_samples": 10
+      }
+    },
+    "runs": [
+      {
+        "case_id": "ground-01",
+        "mode": "fixed",
+        "run_id": "9e75c6bbcdcc46b698cf2b1219508773",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The request to parcel-api timed out on worker-east because there were no local endpoints available for the NodePort service.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The EndpointSlices show no east endpoint, and the east proxy trace records the incoming SYN being dropped by the external Local path for exactly that reason."
+          },
+          {
+            "index": 1,
+            "claim": "The request to parcel-api succeeded on worker-west because it had local endpoints available.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The cited EndpointSlices establish that west had both ready endpoints, but not that the request succeeded or that Local policy made endpoint locality decisive. The uncited Service observation supplies the HTTP 200 and policy."
+          }
+        ],
+        "note": "The diagnosis is correct overall. The west half needs the Service observation alongside the EndpointSlices; node readiness and ClusterIP success do not establish external backend eligibility on each node."
+      },
+      {
+        "case_id": "ground-01",
+        "mode": "diagnostic",
+        "run_id": "42b23750435c452884b7f0d1b5c2bc8c",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The request to parcel-api timed out on worker-east because there were no local endpoints available for the NodePort service.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The EndpointSlices show no east endpoint, and the east proxy trace records the incoming SYN being dropped by the external Local path for exactly that reason."
+          },
+          {
+            "index": 1,
+            "claim": "The request to parcel-api succeeded on worker-west because it had local endpoints available.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The cited EndpointSlices establish that west had both ready endpoints, but not that the request succeeded or that Local policy made endpoint locality decisive. The uncited Service observation supplies the HTTP 200 and policy."
+          }
+        ],
+        "note": "The diagnosis is correct overall. The west half needs the Service observation alongside the EndpointSlices; node readiness and ClusterIP success do not establish external backend eligibility on each node."
+      },
+      {
+        "case_id": "ground-02",
+        "mode": "fixed",
+        "run_id": "9efe3dfe250e44609738b36a4060c127",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "map-cache-0 cannot schedule because its pre-bound claim is already Bound to a specific PersistentVolume.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The claim observation establishes pre-binding, not that being Bound blocks scheduling. The scheduler identifies the actual blocker: the PV requires storage-b, which fails the pod selector, while gpu-a fails the PV's node affinity."
+          },
+          {
+            "index": 1,
+            "claim": "The pod remains Pending with no spec.nodeName, indicating it has not been scheduled despite the eligible GPU node having capacity.",
+            "citation_supported": 1,
+            "conclusion_correct": 0,
+            "note": "Status and placement support that the pod is unscheduled despite spare capacity on the selector-matching node. This is a factual restatement of the premise, not a useful conclusion about what prevents scheduling."
+          }
+        ],
+        "note": "The full case is answerable, but this packet lacks the decisive scheduler record. The answer should not infer a blocker from Bound status; it should identify the need for scheduler diagnostics or PV node-affinity evidence."
+      },
+      {
+        "case_id": "ground-02",
+        "mode": "diagnostic",
+        "run_id": "9ac2e22da5a44d70b20ab2779b9e740d",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "map-cache-0 cannot schedule because its pre-bound claim is already Bound to a specific PersistentVolume.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The claim observation establishes pre-binding, not that being Bound blocks scheduling. The scheduler identifies the actual blocker: the PV requires storage-b, which fails the pod selector, while gpu-a fails the PV's node affinity."
+          },
+          {
+            "index": 1,
+            "claim": "The pod remains Pending with no spec.nodeName, indicating it has not been scheduled despite the eligible GPU node having capacity.",
+            "citation_supported": 1,
+            "conclusion_correct": 0,
+            "note": "Status and placement support that the pod is unscheduled despite spare capacity on the selector-matching node. This is a factual restatement of the premise, not a useful conclusion about what prevents scheduling."
+          }
+        ],
+        "note": "The full case is answerable, but this packet lacks the decisive scheduler record. The answer should not infer a blocker from Bound status; it should identify the need for scheduler diagnostics or PV node-affinity evidence."
+      },
+      {
+        "case_id": "ground-03",
+        "mode": "fixed",
+        "run_id": "bfe33716b2e4498398cf309da14520af",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The HPA recommended increasing replicas from four to six because the average CPU usage across the four replicas was 450m, which exceeded the target average value of 300m.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The metric specifies a 300m AverageValue target and the controller decision records 450m across four replicas and a recommendation of six. The raw-CPU ratio is 1.5."
+          },
+          {
+            "index": 1,
+            "claim": "The CPU utilization percentage was calculated as 15%, indicating that the current usage was significantly below the requested CPU, prompting the HPA to scale up.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The dashboard supports 15% of requested CPU, but not that this prompted scale-up. The runbook distinguishes raw-value targets from utilization targets, and this HPA used the raw-value target."
+          }
+        ],
+        "note": "The first claim correctly explains the recommendation; the second contradicts it by treating the dashboard's request-based percentage as the scaling signal."
+      },
+      {
+        "case_id": "ground-03",
+        "mode": "diagnostic",
+        "run_id": "62fc7e5052bc467c8d140c324b2d0bc5",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The HPA recommended increasing replicas from four to six because the average CPU usage across the four replicas was 450m, which exceeded the target average value of 300m.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The metric specifies a 300m AverageValue target and the controller decision records 450m across four replicas and a recommendation of six. The raw-CPU ratio is 1.5."
+          },
+          {
+            "index": 1,
+            "claim": "The CPU utilization percentage was calculated as 15%, indicating that the current usage was significantly below the requested CPU, prompting the HPA to scale up.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The dashboard supports 15% of requested CPU, but not that this prompted scale-up. The runbook distinguishes raw-value targets from utilization targets, and this HPA used the raw-value target."
+          }
+        ],
+        "note": "The first claim correctly explains the recommendation; the second contradicts it by treating the dashboard's request-based percentage as the scaling signal."
+      },
+      {
+        "case_id": "ground-04",
+        "mode": "fixed",
+        "run_id": "2084f21589bb4e23850c8e91b0f21863",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The new mosaic image never got a ReplicaSet because the Deployment was paused at generation 17 and did not resume.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "History shows the Deployment was paused before and after the image edit, and the controller explicitly skipped rollout reconciliation and still owned only the v7 ReplicaSet."
+          },
+          {
+            "index": 1,
+            "claim": "The Deployment deadline does not automatically roll back the Deployment; it only reports a status condition indicating that progress has stalled.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The rollout excerpt states that an exceeded progress deadline is reported as a status condition, not acted on by the Deployment controller. The claim describes the general rule without asserting that this Deployment exceeded its deadline."
+          }
+        ],
+        "note": "Both answers to the question are correct. The response omits that progress is not checked against the deadline while paused; the elapsed-time dashboard alert was not a controller deadline condition."
+      },
+      {
+        "case_id": "ground-04",
+        "mode": "diagnostic",
+        "run_id": "53a72dda9d4b4487a482b8b434aa0ab2",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The new mosaic image never got a ReplicaSet because the Deployment was paused at generation 17 and did not resume.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "History shows the Deployment was paused before and after the image edit, and the controller explicitly skipped rollout reconciliation and still owned only the v7 ReplicaSet."
+          },
+          {
+            "index": 1,
+            "claim": "The Deployment deadline does not automatically roll back the Deployment; it only reports a status condition indicating that progress has stalled.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The rollout excerpt states that an exceeded progress deadline is reported as a status condition, not acted on by the Deployment controller. The claim describes the general rule without asserting that this Deployment exceeded its deadline."
+          }
+        ],
+        "note": "Both answers to the question are correct. The response omits that progress is not checked against the deadline while paused; the elapsed-time dashboard alert was not a controller deadline condition."
+      },
+      {
+        "case_id": "ground-05",
+        "mode": "fixed",
+        "run_id": "e80bca3e31ac490fa90981574d85f499",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "Receipt-1 was deleted during a maintenance window due to a successful DELETE API request, despite its disruption budget allowing zero evictions.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The audit ties a successful direct Pod DELETE with no subresource to the deletion, the budget snapshots show zero allowed disruptions, and the calendar establishes the maintenance window. Naming the direct DELETE identifies the operation that explains the outcome."
+          }
+        ],
+        "note": "The audit, not the maintenance dashboard's drain label, identifies the mechanism. The answer would be clearer if it explicitly said that the PDB check applies to the Eviction API, not the direct Pod DELETE."
+      },
+      {
+        "case_id": "ground-05",
+        "mode": "diagnostic",
+        "run_id": "69e909e7b3454f469df0cf378004a2e4",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "Receipt-1 was deleted during a maintenance window due to a successful DELETE API request, despite its disruption budget allowing zero evictions.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The audit ties a successful direct Pod DELETE with no subresource to the deletion, the budget snapshots show zero allowed disruptions, and the calendar establishes the maintenance window. Naming the direct DELETE identifies the operation that explains the outcome."
+          }
+        ],
+        "note": "The audit, not the maintenance dashboard's drain label, identifies the mechanism. The answer would be clearer if it explicitly said that the PDB check applies to the Eviction API, not the direct Pod DELETE."
+      },
+      {
+        "case_id": "ground-06",
+        "mode": "fixed",
+        "run_id": "118ef9be2cc3433db0b34362bc664f41",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The invoice gateway is not ready because it has a CreateContainerConfigError, preventing it from starting.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The current pod's init completed, but the gateway is waiting with CreateContainerConfigError and has no container ID, start timestamp, or previous state. This supports a startup blocker rather than a failed readiness check."
+          },
+          {
+            "index": 1,
+            "claim": "The readiness probe has not run yet, as indicated by the absence of probe samples for the current pod UID.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The cited panel has no samples, which does not establish that the probe never ran. The full case supports the conclusion because the gateway never started in this pod."
+          },
+          {
+            "index": 2,
+            "claim": "The gateway is unable to find the required key 'region' in the Secret 'billing/invoice-settings', which may contribute to the CreateContainerConfigError.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The non-optional Secret key reference and the kubelet's missing-key event for this pod support the stated link. The full case identifies the missing key as the startup blocker, so 'may contribute' understates the evidence."
+          }
+        ],
+        "note": "Correct startup diagnosis and probe outcome, but the no-probe claim should cite the container's never-started state, not missing telemetry."
+      },
+      {
+        "case_id": "ground-06",
+        "mode": "diagnostic",
+        "run_id": "bb95e190c8ef486e90f4dd640330d70f",
+        "answerable": true,
+        "expected_status": "diagnosed",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The invoice gateway is not ready because it has a CreateContainerConfigError, preventing it from starting.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The current pod's init completed, but the gateway is waiting with CreateContainerConfigError and has no container ID, start timestamp, or previous state. This supports a startup blocker rather than a failed readiness check."
+          },
+          {
+            "index": 1,
+            "claim": "The readiness probe has not run yet, as indicated by the absence of probe samples for the current pod UID.",
+            "citation_supported": 0,
+            "conclusion_correct": 1,
+            "note": "The cited panel has no samples, which does not establish that the probe never ran. The full case supports the conclusion because the gateway never started in this pod."
+          },
+          {
+            "index": 2,
+            "claim": "The gateway is unable to find the required key 'region' in the Secret 'billing/invoice-settings', which may contribute to the CreateContainerConfigError.",
+            "citation_supported": 1,
+            "conclusion_correct": 1,
+            "note": "The non-optional Secret key reference and the kubelet's missing-key event for this pod support the stated link. The full case identifies the missing key as the startup blocker, so 'may contribute' understates the evidence."
+          }
+        ],
+        "note": "Correct startup diagnosis and probe outcome, but the no-probe claim should cite the container's never-started state, not missing telemetry."
+      },
+      {
+        "case_id": "ground-07",
+        "mode": "fixed",
+        "run_id": "64cfdcb1e0494c17a6bc21046c536884",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 0,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The external NodePort request to dispatch-api timed out on edge-b because Local policy left that node without a backend.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The citations show a node-specific timeout, Local policy, and a service-wide endpoint count, but not endpoint placement or packet arrival on edge-b. The working ClusterIP and Ready nodes do not distinguish the two causes."
+          }
+        ],
+        "note": "The Local-policy explanation is plausible but not established. Node-local endpoint placement and evidence of packet arrival are missing."
+      },
+      {
+        "case_id": "ground-07",
+        "mode": "diagnostic",
+        "run_id": "41cd447143604d52afd579e7426169ec",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 0,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The external NodePort request to dispatch-api timed out on edge-b because Local policy left that node without a backend.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The citations show a node-specific timeout, Local policy, and a service-wide endpoint count, but not endpoint placement or packet arrival on edge-b. The working ClusterIP and Ready nodes do not distinguish the two causes."
+          }
+        ],
+        "note": "The Local-policy explanation is plausible but not established. Node-local endpoint placement and evidence of packet arrival are missing."
+      },
+      {
+        "case_id": "ground-08",
+        "mode": "fixed",
+        "run_id": "2a18b680d7a04a4d803e5c924d83118d",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 0,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The Bound data volume is blocked on mounting after attachment.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The citation establishes PVC binding and ReadWriteOnce, not successful attachment or a mount failure. The node move, ContainerCreating, and a Ready destination node do not establish either storage stage."
+          }
+        ],
+        "note": "The answer treats binding as evidence of attachment. A matching VolumeAttachment status, CSI or kubelet event, or equivalent trace is needed."
+      },
+      {
+        "case_id": "ground-08",
+        "mode": "diagnostic",
+        "run_id": "a7eee54301e94be5b1dc440cb386e832",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "insufficient",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [],
+        "note": "Appropriate abstention: PVC binding does not establish attachment or mounting on data-b. The answer asks for the missing stage-specific status; a matching VolumeAttachment or CSI or kubelet event would make that request more actionable."
+      },
+      {
+        "case_id": "ground-09",
+        "mode": "fixed",
+        "run_id": "c3d87d7ab542467581ab65b2c0a35374",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "insufficient",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [],
+        "note": "Appropriate abstention: the HPA wrote eight, which is also the maximum, so the applied count cannot distinguish an exact recommendation from a capped one. The relevant evidence is the CPU inputs actually used in that reconciliation or its pre-limit recommendation, not a coarse dashboard bucket."
+      },
+      {
+        "case_id": "ground-09",
+        "mode": "diagnostic",
+        "run_id": "7eb4533a004c49f787ccdfc79086b276",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "insufficient",
+        "failed": false,
+        "abstention_correct": 1,
+        "inappropriate_abstention": 0,
+        "full_correct": 1,
+        "claims": [],
+        "note": "Appropriate abstention: the HPA wrote eight, which is also the maximum, so the applied count cannot distinguish an exact recommendation from a capped one. The relevant evidence is the CPU inputs actually used in that reconciliation or its pre-limit recommendation, not a coarse dashboard bucket."
+      },
+      {
+        "case_id": "ground-10",
+        "mode": "fixed",
+        "run_id": "495e465ddd06490f823e74c69b0552af",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 0,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The new tariff pods counted as zero available because they had not been Ready for the required 120 seconds.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The rollout citation gives the 120-second minimum and zero available, and the probe runbook explains readiness generally. Neither establishes that the pods were Ready at 10:42 but for less than 120 seconds; the full record does not either."
+          },
+          {
+            "index": 1,
+            "claim": "At 10:39, one of the new pods returned HTTP 503 to a readiness check, indicating it was not ready.",
+            "citation_supported": 1,
+            "conclusion_correct": 0,
+            "note": "The event supports the 10:39 HTTP 503 from one pod as a signal of a readiness problem then, not as a definitive Pod Ready condition. This earlier symptom does not distinguish the two explanations at 10:42."
+          }
+        ],
+        "note": "The 10:39 failure and 10:48 recovery do not resolve the 10:42 snapshot. The new pods' Ready conditions and transition times at 10:42 are missing."
+      },
+      {
+        "case_id": "ground-10",
+        "mode": "diagnostic",
+        "run_id": "15a845a2561e44e5bdd2d3a8fa939b57",
+        "answerable": false,
+        "expected_status": "insufficient",
+        "status": "diagnosed",
+        "failed": false,
+        "abstention_correct": 0,
+        "inappropriate_abstention": 0,
+        "full_correct": 0,
+        "claims": [
+          {
+            "index": 0,
+            "claim": "The new tariff pods counted as zero available because they had not been Ready for the required 120 seconds.",
+            "citation_supported": 0,
+            "conclusion_correct": 0,
+            "note": "The rollout citation gives the 120-second minimum and zero available, and the probe runbook explains readiness generally. Neither establishes that the pods were Ready at 10:42 but for less than 120 seconds; the full record does not either."
+          },
+          {
+            "index": 1,
+            "claim": "At 10:39, one of the new pods returned HTTP 503 to a readiness check, indicating it was not ready.",
+            "citation_supported": 1,
+            "conclusion_correct": 0,
+            "note": "The event supports the 10:39 HTTP 503 from one pod as a signal of a readiness problem then, not as a definitive Pod Ready condition. This earlier symptom does not distinguish the two explanations at 10:42."
+          }
+        ],
+        "note": "The 10:39 failure and 10:48 recovery do not resolve the 10:42 snapshot. The new pods' Ready conditions and transition times at 10:42 are missing."
+      }
+    ]
+  }
+}
