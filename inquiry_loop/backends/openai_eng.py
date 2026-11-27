@@ -8,13 +8,18 @@ import time
 from inquiry_loop.paths import ENV_FILE
 
 
+def configured_openai_model(model=None):
+    from dotenv import load_dotenv
+
+    load_dotenv(ENV_FILE, override=False)
+    return model or os.environ.get("AGENT_MODEL", "gpt-4o-mini")
+
+
 class OpenAIModel:
     def __init__(self, *, tool_schemas, model=None):
         from openai import OpenAI
-        from dotenv import load_dotenv
 
-        load_dotenv(ENV_FILE, override=False)
-        self.model = model or os.environ.get("AGENT_MODEL", "gpt-4o-mini")
+        self.model = configured_openai_model(model)
         self.tool_schemas = tool_schemas
         self.client = OpenAI()
 

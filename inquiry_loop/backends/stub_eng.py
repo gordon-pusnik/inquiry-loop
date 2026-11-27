@@ -30,7 +30,9 @@ class StubModel:
         ]
         self.i = 0
 
-    def respond(self, messages: List[Dict[str, Any]]):
+    def respond(self, messages: List[Dict[str, Any]], *, allow_tools=True):
+        if not allow_tools:
+            return ModelResponse([], "Offline stub reply.")
         step = self.script[min(self.i, len(self.script) - 1)]
         self.i += 1
         return ModelResponse.from_parts(*step)

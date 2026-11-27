@@ -109,7 +109,7 @@ class ResearchTests(unittest.TestCase):
             self.assertIn("Jev evidence check (shadow) — partial (73%, jev-example)", text)
             self.assertLess(text.index("Sources"), text.index("Jev evidence check"))
 
-    def test_interactive_research_keeps_session_and_new_restores_default(self):
+    def test_interactive_research_uses_separate_session_and_new_restores_default(self):
         model = Mock()
         model.respond.side_effect = [ModelResponse([], text, {}) for text in (
             "Normal answer", "Evidence [S1].", "More evidence [S1].", "Fresh answer")]
@@ -134,16 +134,23 @@ class ResearchTests(unittest.TestCase):
                 self.assertEqual(cli.main(["--interactive", "--db", path]), 0)
             store = SessionStore(path)
             try:
-                sessions = {session["title"]: session["id"] for session in store.list_sessions()}
-                original, fresh = sessions["private prior turn"], sessions["fresh task"]
-                original_runs = store.runs(original)
-                self.assertEqual([run["request"] for run in original_runs], commands[:1] + commands[2:4])
-                self.assertEqual([run["request"] for run in store.runs(fresh)], ["fresh task"])
-                history = json.loads(store.get_session(original)["history_json"])
+                sessions = {session["title"]: session for session in store.list_sessions()}
+                original, research_session, fresh = (sessions[title] for title in
+                                                     ("private prior turn", QUESTION, "fresh task"))
+                self.assertEqual([original["mode"], research_session["mode"], fresh["mode"]],
+                                 ["code", "research", "code"])
+                self.assertEqual([run["request"] for run in store.runs(original["id"])], commands[:1])
+                self.assertEqual([run["request"] for run in store.runs(fresh["id"])], ["fresh task"])
+                research_runs = store.runs(research_session["id"])
+                self.assertEqual([run["request"] for run in research_runs], commands[2:4])
+                history = json.loads(store.get_session(research_session["id"])["history_json"])
                 self.assertEqual([message["content"] for message in history if message["role"] == "user"],
-                                 [run["request"] for run in original_runs])
-                for run in original_runs[1:]:
-                    self.assertIn("evidence_check", [event["kind"] for event in store.events(run["id"])])
+                                 commands[2:4])
+                for run in research_runs:
+                    events = {event["kind"]: json.loads(event["payload_json"])
+                              for event in store.events(run["id"])}
+                    self.assertIn("evidence_check", events)
+                    self.assertEqual(events["run_started"]["settings"]["evidence_check"], "shadow")
             finally:
                 store.close()
         self.assertEqual(search.call_count, 2)
@@ -152,7 +159,37 @@ class ResearchTests(unittest.TestCase):
         self.assertEqual(judge.judge.call_count, 2)
         self.assertNotIn("private prior turn", str(judge.judge.call_args_list))
         self.assertNotIn("private prior turn", str(model.respond.call_args_list[1:]))
+        self.assertNotIn(QUESTION, str(model.respond.call_args_list[2]))
         self.assertEqual(output.getvalue().count("partial (73%, jev-example)\nopenai processed request"), 2)
+
+    def test_resumed_research_defaults_to_shadow_in_next_cli_process(self):
+        model = Mock(model_id="model")
+        model.respond.return_value = ModelResponse([], "Evidence [S1].")
+        judge = Mock()
+        judge.judge.return_value = {"status": "ok", "label": "supported", "model": "jev-example",
+                                   "probabilities": {"supported": 0.95}}
+        search = Mock(return_value=OBSERVATION)
+        real_runner = research.run_research
+        with tempfile.TemporaryDirectory() as directory:
+            path = str(Path(directory) / "research.sqlite3")
+            with (patch("inquiry_loop.cli.create_model", return_value=model),
+                  patch("inquiry_loop.providers.jev_eng.JevClient", return_value=judge),
+                  patch("inquiry_loop.research.run_research",
+                        side_effect=lambda *a, **kw: real_runner(*a, **kw, search_fn=search)),
+                  patch("builtins.input", side_effect=["/status", "Next public question?", "/quit"]),
+                  contextlib.redirect_stdout(io.StringIO()) as output):
+                self.assertEqual(cli.main(["--db", path, "--research", "--evidence-check", "enforce", QUESTION]), 0)
+                with contextlib.closing(SessionStore(path)) as store:
+                    session, = store.list_sessions()
+                self.assertEqual(cli.main(["--db", path, "--resume", session["id"], "--interactive"]), 0)
+            with contextlib.closing(SessionStore(path)) as store:
+                original, resumed = store.runs(session["id"])
+                first_settings = json.loads(store.events(original["id"])[0]["payload_json"])["settings"]
+                second_settings = json.loads(store.events(resumed["id"])[0]["payload_json"])["settings"]
+                self.assertEqual(first_settings, {"evidence_check": "enforce", "supported_cutoff": 0.60})
+                self.assertEqual(second_settings, {"evidence_check": "shadow"})
+        self.assertIn("Mode: research (shadow)", output.getvalue())
+        self.assertNotIn(QUESTION, str(model.respond.call_args_list[1]))
 
 
 class JevTests(unittest.TestCase):

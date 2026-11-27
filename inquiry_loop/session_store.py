@@ -36,15 +36,19 @@ class SessionStore:
         self.db = sqlite3.connect(str(path), timeout=5)
         self.db.row_factory = sqlite3.Row
         self.db.execute('PRAGMA foreign_keys=ON')
-        version = self.db.execute('PRAGMA user_version').fetchone()[0]
-        if version not in (0, 1):
+        try:
+            self._initialize_schema()
+        except BaseException:
             self.db.close()
-            raise ValueError(f'Unsupported session database schema: {version}')
-        self.db.executescript('''
+            raise
+
+    def _initialize_schema(self):
+        schema = '''
             CREATE TABLE IF NOT EXISTS sessions (
                 id TEXT PRIMARY KEY, created_at TEXT NOT NULL, updated_at TEXT NOT NULL,
                 title TEXT NOT NULL, backend TEXT NOT NULL, model TEXT NOT NULL,
-                cwd TEXT NOT NULL, history_json TEXT NOT NULL DEFAULT '[]');
+                cwd TEXT NOT NULL, history_json TEXT NOT NULL DEFAULT '[]',
+                mode TEXT NOT NULL DEFAULT 'code', replay_items_json TEXT NOT NULL DEFAULT '{}');
             CREATE TABLE IF NOT EXISTS runs (
                 id TEXT PRIMARY KEY, session_id TEXT NOT NULL REFERENCES sessions(id),
                 status TEXT NOT NULL, request TEXT NOT NULL, started_at TEXT NOT NULL,
@@ -54,8 +58,23 @@ class SessionStore:
                 created_at TEXT NOT NULL, kind TEXT NOT NULL, payload_json TEXT NOT NULL);
             CREATE INDEX IF NOT EXISTS runs_session ON runs(session_id, started_at);
             CREATE INDEX IF NOT EXISTS events_run ON events(run_id, id);
-            PRAGMA user_version=1;
-        ''')
+        '''
+        if self.db.execute('PRAGMA user_version').fetchone()[0] == 3:
+            return
+        with self.db:
+            self.db.execute('BEGIN IMMEDIATE')
+            version = self.db.execute('PRAGMA user_version').fetchone()[0]
+            if version not in (0, 1, 2, 3):
+                raise ValueError(f'Unsupported session database schema: {version}')
+            if version == 0:
+                for statement in schema.strip().rstrip(';').split(';'):
+                    self.db.execute(statement)
+            columns = {column['name'] for column in self.db.execute('PRAGMA table_info(sessions)')}
+            if 'mode' not in columns:
+                self.db.execute("ALTER TABLE sessions ADD COLUMN mode TEXT NOT NULL DEFAULT 'code'")
+            if 'replay_items_json' not in columns:
+                self.db.execute("ALTER TABLE sessions ADD COLUMN replay_items_json TEXT NOT NULL DEFAULT '{}'")
+            self.db.execute('PRAGMA user_version=3')
 
     @contextmanager
     def session_lock(self, sid):
@@ -94,13 +113,14 @@ class SessionStore:
     def close(self):
         self.db.close()
 
-    def create_session(self, backend, model, cwd=None):
+    def create_session(self, backend, model, cwd=None, *, mode='code'):
         sid = uuid4().hex
         stamp = now()
         with self.db:
-            self.db.execute('INSERT INTO sessions VALUES(?,?,?,?,?,?,?,?)',
+            self.db.execute('INSERT INTO sessions(id,created_at,updated_at,title,backend,model,cwd,history_json,mode) '
+                            'VALUES(?,?,?,?,?,?,?,?,?)',
                             (sid, stamp, stamp, 'New session', backend, model,
-                             os.path.realpath(cwd or os.getcwd()), '[]'))
+                             os.path.realpath(cwd or os.getcwd()), '[]', mode))
         return sid
 
     def get_session(self, prefix):
@@ -113,7 +133,7 @@ class SessionStore:
 
     def list_sessions(self):
         return [dict(r) for r in self.db.execute(
-            'SELECT id,created_at,updated_at,title,backend,model,cwd FROM sessions ORDER BY updated_at DESC,id')]
+            'SELECT id,created_at,updated_at,title,backend,model,cwd,mode FROM sessions ORDER BY updated_at DESC,id')]
 
     def start_run(self, sid, request):
         rid = uuid4().hex
@@ -131,7 +151,7 @@ class SessionStore:
             self.db.execute('INSERT INTO events(run_id,created_at,kind,payload_json) VALUES(?,?,?,?)',
                             (rid, now(), kind, encode(payload)))
 
-    def finish_run(self, result, history):
+    def finish_run(self, result, history, replay_items=None):
         with self.db:
             self.db.execute('UPDATE runs SET status=?,finished_at=?,elapsed=?,stats_json=?,answer=?,error=? WHERE id=?',
                             (result.status.value, now(), result.elapsed, encode(result.stats),
@@ -139,8 +159,8 @@ class SessionStore:
             # Only normal answers advance conversation checkpoints. Failed,
             # interrupted, and budget-stopped actions are never replayed.
             if result.status == RunStatus.COMPLETED:
-                self.db.execute('UPDATE sessions SET history_json=?, updated_at=? WHERE id=?',
-                                (encode(history), now(), result.session_id))
+                self.db.execute('UPDATE sessions SET history_json=?, replay_items_json=?, updated_at=? WHERE id=?',
+                                (encode(history), encode(replay_items or {}), now(), result.session_id))
             self.db.execute('INSERT INTO events(run_id,created_at,kind,payload_json) VALUES(?,?,?,?)',
                             (result.run_id, now(), 'run_finished', encode({
                                 'status': result.status.value, 'elapsed': result.elapsed,
@@ -154,14 +174,15 @@ class SessionStore:
 
 
 class SessionRunner:
-    def __init__(self, store, backend, model, sid=None):
+    def __init__(self, store, backend, model, sid=None, *, mode='code'):
         self.store, self.backend, self.model = store, backend, model
+        self.mode = mode
         self.sid = None
         if sid:
             self.resume(sid)
 
     def new(self):
-        self.sid = self.store.create_session(self.backend, self.model)
+        self.sid = self.store.create_session(self.backend, self.model, mode=self.mode)
         return self.sid
 
     def resume(self, prefix):
@@ -171,25 +192,31 @@ class SessionRunner:
         if session['cwd'] != os.path.realpath(os.getcwd()):
             raise ValueError(f"Session working directory differs: {session['cwd']}; restart there or use /new.")
         self.sid = session['id']
+        self.mode = session['mode']
         return self.sid
 
-    def run(self, request, model, run_fn, metrics, max_steps):
+    def run(self, request, model, run_fn, metrics, max_steps, *, run_settings=None):
         if self.sid is None:
             self.new()
         with self.store.session_lock(self.sid):
             self.store.recover_unfinished(self.sid)
-            return self._run_locked(request, model, run_fn, metrics, max_steps)
+            return self._run_locked(request, model, run_fn, metrics, max_steps, run_settings)
 
-    def _run_locked(self, request, model, run_fn, metrics, max_steps):
+    def _run_locked(self, request, model, run_fn, metrics, max_steps, run_settings):
         session = self.store.get_session(self.sid)
         rid = self.store.start_run(self.sid, request)
         context = RunContext(previous_messages=json.loads(session['history_json']),
+                             replay_items=json.loads(session['replay_items_json']),
                              emit=lambda kind, payload: self.store.event(rid, kind, payload))
+        settings = {name: getattr(model, name) for name in (
+            'max_tokens', 'max_context_tokens', 'prefill_step_size', 'enable_thinking'
+        ) if type(getattr(model, name, None)) in (int, float, bool)}
+        if self.backend == 'openai' and isinstance(getattr(model, 'reasoning_effort', None), str):
+            settings['reasoning_effort'] = model.reasoning_effort
+        settings.update(run_settings or {})
         context.emit('run_started', {'request': request, 'backend': self.backend,
-                                    'model': self.model, 'max_steps': max_steps,
-                                    'settings': {name: getattr(model, name) for name in (
-                                        'max_tokens', 'max_context_tokens', 'prefill_step_size',
-                                        'enable_thinking') if type(getattr(model, name, None)) in (int, float, bool)}})
+                                    'model': self.model, 'mode': self.mode, 'max_steps': max_steps,
+                                    'settings': settings})
         started = time.monotonic()
         answer, error = '', None
         try:
@@ -204,7 +231,7 @@ class SessionRunner:
         finally:
             result = RunResult(rid, self.sid, context.status, answer,
                                time.monotonic() - started, metrics.as_dict(), error)
-            self.store.finish_run(result, context.messages)
+            self.store.finish_run(result, context.messages, context.replay_items)
         return result
 
     def stats_text(self, prefix=None):

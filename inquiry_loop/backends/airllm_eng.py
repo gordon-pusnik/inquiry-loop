@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from inquiry_loop.response_types import ModelResponse
 
+import gc
 import json
 import os
 from pathlib import Path
@@ -212,3 +213,9 @@ class AirLLMModel:
         }
         calls, text = self._parse_response(self.tokenizer.decode(tokens, skip_special_tokens=True))
         return ModelResponse.from_parts(calls, text, self.last_stats)
+
+    def close(self):
+        self.model = self.tokenizer = None
+        gc.collect()
+        self.mx.synchronize()
+        self.mx.clear_cache()

@@ -1,6 +1,13 @@
 # Inquiry Loop
 
-Inquiry Loop is a Python CLI for experimenting with local and hosted language models, including local GGUF models through llama.cpp. Use it to inspect files with a tool-using agent, ask cited web research questions, or trace runs in SQLite. A separate benchmark suite evaluates evidence retrieval, cited incident diagnoses, and local versus hosted inference.
+![Python](https://img.shields.io/badge/Python-3.11%2B-blue)
+![MLX](https://img.shields.io/badge/Local%20Inference-MLX-orange)
+![llama.cpp](https://img.shields.io/badge/Local%20Inference-llama.cpp-orange)
+![Tavily](https://img.shields.io/badge/Web%20Search-Tavily-green)
+![TypeSafe Jev](https://img.shields.io/badge/Evidence%20Checks-Jev-purple)
+![SQLite](https://img.shields.io/badge/Run%20Tracing-SQLite-blue)
+
+Inquiry Loop is a Python CLI for chat, coding, and cited web research. Use `/chat` for a conversation, `/code` for an agent that can inspect and edit files, run Git commands, and use tool results to decide what to do next, or `/research` for answers grounded in Tavily search results. Switch between local MLX models, GGUF models through llama.cpp, and hosted OpenAI models from the same prompt. SQLite checkpoints let you resume each model and mode’s conversation. For research, TypeSafe Jev’s shadow mode reports how well the retrieved evidence covers the question. Enforce mode can trigger one focused follow-up search when coverage falls short.
 
 ## Quickstart
 
@@ -26,7 +33,9 @@ python3 agent.py "List the files here and summarize requirements.txt"
 python3 agent.py --interactive
 ```
 
-At the interactive prompt, type `/status` to see the active engine and model. [Interactive commands](docs/cli.md#interactive-sessions)
+At the interactive prompt, use `/chat` for text chat, `/code` for the general agent with tools, or `/research` for cited web research. Type `/status` to see the engine, model, mode, and reasoning effort. Use `/model openai`, `/model mlx`, or `/model llama` to switch engines and stay in the same mode. With tracing enabled, returning to a model restores its conversation for that mode. [Interactive commands](docs/cli.md#interactive-sessions)
+
+Set `AGENT_MODEL=gpt-6.2-sol` or `AGENT_MODEL=gpt-6.2-astra` in `.env` to use OpenAI Responses for chat, coding tools, and research synthesis. Use `/effort` to see the current setting or `/effort high` to change it for the running session. [OpenAI configuration](docs/cli.md#openai-models-and-reasoning-effort)
 
 ### Run a local GGUF with llama.cpp
 

@@ -11,15 +11,22 @@ import httpx
 
 from inquiry_loop import agent, cli, research
 from inquiry_loop.backends.llama_eng import LlamaModel
+from inquiry_loop.request_metrics import RequestMetrics
+from inquiry_loop.response_types import RunContext, RunStatus
 from inquiry_loop.session_store import SessionStore
 
 
-def completion(content=None, *, calls=None, finish="stop"):
+def completion(content=None, *, calls=None, finish="stop", prompt_tokens=10):
     return httpx.Response(200, json={
         "choices": [{"finish_reason": finish, "message": {"content": content, "tool_calls": calls}}],
-        "usage": {"prompt_tokens": 10, "completion_tokens": 4},
+        "usage": {"prompt_tokens": prompt_tokens, "completion_tokens": 4},
         "timings": {"predicted_n": 4, "predicted_ms": 200},
     })
+
+
+def context_error():
+    return httpx.Response(400, json={"error": {"type": "exceed_context_size_error",
+                                             "n_prompt_tokens": 8300, "n_ctx": 8192}})
 
 
 class LlamaTests(unittest.TestCase):
@@ -117,6 +124,63 @@ class LlamaTests(unittest.TestCase):
             model.respond([])
         with self.assertRaisesRegex(ValueError, "No tool was executed"):
             model.respond([])
+
+    def test_context_retry_keeps_current_tool_results_and_saved_history(self):
+        model = LlamaModel(model_path=self.model_path, tool_schemas=agent.TOOL_SCHEMAS)
+        self.addCleanup(model.close)
+        older = [{"role": "user", "content": "old request"}, {"role": "assistant", "content": "old reply"}]
+        recent = [{"role": "user", "content": "recent request"}, {"role": "assistant", "content": "recent reply"}]
+        context = RunContext(previous_messages=[*older, *recent])
+        calls = [
+            completion(calls=[{"id": name, "type": "function",
+                               "function": {"name": "list_dir", "arguments": '{"path":"."}'}}],
+                       finish="tool_calls")
+            for name in ("first", "second")
+        ]
+        self.replies = [calls[0], context_error(), calls[1], completion("Finished.")]
+        directory = Mock(return_value={"entries": ["example.txt"]})
+        metrics = RequestMetrics()
+        with patch.dict(agent.TOOLS, {"list_dir": directory}):
+            answer = agent.run_agent("current request", model, verbose=False, context=context, metrics=metrics)
+        original, rejected, retried, final = [entry["messages"] for entry in self.completions]
+        self.assertIn(older[0], original)
+        self.assertIn(older[0], rejected)
+        self.assertEqual(retried, rejected[:1] + rejected[3:])
+        self.assertEqual(final[:-2], retried)
+        self.assertEqual(retried[-1]["tool_call_id"], "first")
+        self.assertEqual(final[-1]["tool_call_id"], "second")
+        self.assertEqual(directory.call_count, 2)
+        self.assertEqual(context.messages[:4], [*older, *recent])
+        self.assertEqual(context.status, RunStatus.COMPLETED)
+        self.assertEqual(answer, "Finished.")
+        self.assertEqual(metrics.history_turns_omitted, 1)
+
+    def test_context_retry_stops_when_the_current_request_does_not_fit(self):
+        model = LlamaModel(model_path=self.model_path, tool_schemas=[])
+        self.addCleanup(model.close)
+        self.replies = [context_error(), context_error()]
+        messages = [{"role": "user", "content": "old"}, {"role": "assistant", "content": "old reply"},
+                    {"role": "user", "content": "current"}]
+        with self.assertRaisesRegex(ValueError, "current request and its tool results"):
+            model.respond(messages)
+        self.assertEqual(self.completions[-1]["messages"], messages[-1:])
+
+    def test_context_filled_generation_is_retried_but_unrelated_http_400_is_not(self):
+        model = LlamaModel(model_path=self.model_path, tool_schemas=[])
+        self.addCleanup(model.close)
+        messages = [{"role": "user", "content": "old"}, {"role": "assistant", "content": "old reply"},
+                    {"role": "user", "content": "current"}]
+        self.replies = [
+            completion("Partial", finish="length", prompt_tokens=model.max_context_tokens - 4),
+            completion("Complete."),
+            httpx.Response(400, json={"error": {"type": "invalid_request_error", "message": "Invalid template."}}),
+        ]
+        self.assertEqual(model.respond(messages).text, "Complete.")
+        self.assertEqual(self.completions[1]["messages"], messages[-1:])
+        with self.assertRaisesRegex(RuntimeError, "HTTP 400"):
+            model.respond(messages)
+        self.assertEqual(len(self.completions), 3)
+        self.assertEqual(self.completions[-1]["messages"], messages)
 
     def test_unified_cli_uses_serve_with_or_without_explicit_path(self):
         for configured in (None, "~/bin/llama"):

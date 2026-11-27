@@ -89,8 +89,7 @@ def write_file(path: str, content: str) -> Dict[str, Any]:
 
 
 def run_shell(command: str) -> Dict[str, Any]:
-    # Guardrail: only a few safe commands in a hello-world agent.
-    allowed = {"ls", "cat", "wc", "head", "tail", "echo", "pwd", "date", "mkdir"}
+    allowed = {"ls", "cat", "wc", "head", "tail", "echo", "pwd", "date", "mkdir", "git"}
     try:
         argv = shlex.split(command)
     except ValueError as exc:
@@ -100,6 +99,8 @@ def run_shell(command: str) -> Dict[str, Any]:
         return {"error": f"command not allowed: {first_word!r}. Allowed: {sorted(allowed)}. Use read_file(offset, limit) or search_file for source inspection.", "retryable": False}
     if first_word != "echo" and any(arg in ("|", "||", "&&", ";", ">", ">>", "<") for arg in argv):
         return {"error": "Shell pipelines, chaining, and redirection are unsupported. Use read_file with offset/limit and next_offset to page through files; use search_file to locate code.", "retryable": False}
+    if first_word == "git":
+        argv.insert(1, "--no-pager")
     # Never interpret model-generated text as shell syntax. Drain both pipes
     # concurrently, retaining bounded previews and stopping excessive output.
     output: Dict[str, str] = {}
@@ -229,7 +230,7 @@ TOOL_SCHEMAS = [
         "type": "function",
         "function": {
             "name": "run_shell",
-            "description": "Run one executable: ls, cat, wc, head, tail, echo, pwd, date, mkdir. No shell pipelines, redirection, chaining, or sed. For file inspection use read_file(offset, limit) and search_file instead.",
+            "description": "Run one executable: ls, cat, wc, head, tail, echo, pwd, date, mkdir, git. Use git for version control, such as git status --short, git diff, or git log -5 --oneline. No shell pipelines, redirection, chaining, or sed. For file inspection use read_file(offset, limit) and search_file instead.",
             "parameters": {
                 "type": "object",
                 "properties": {"command": {"type": "string"}},
@@ -310,6 +311,7 @@ def run_agent(request: str, model, max_steps: int = MAX_STEPS, verbose: bool = T
 
     reads = {}
     consecutive_errors = 0
+    history_offset = 1
     for step in range(max_steps):
         final_turn = step == max_steps - 1 or consecutive_errors >= 3
         if final_turn:
@@ -317,10 +319,14 @@ def run_agent(request: str, model, max_steps: int = MAX_STEPS, verbose: bool = T
                 "This is the final response turn. Do not request more tools. Give a concise assessment "
                 "using the observations already available, explicitly noting unread content, errors, "
                 "and any work you could not complete.")})
-        context.emit('model_started', {'step': step + 1, 'message_count': len(messages)})
+        prompt = messages if history_offset == 1 else [messages[0], *messages[history_offset:]]
+        context.emit('model_started', {'step': step + 1, 'message_count': len(prompt)})
         model_started = time.monotonic()
-        raw_response = model.respond(messages)
+        raw_response = model.respond(context.model_messages(model, prompt))
         response = ModelResponse.coerce(raw_response, getattr(model, "last_stats", None))
+        omitted = response.stats.get("history_messages_omitted") if isinstance(response.stats, dict) else None
+        if type(omitted) is int and 0 < omitted <= len(context.previous_messages) + 1 - history_offset:
+            history_offset += omitted
         # Legacy adapters populate last_stats during respond(), not before it.
         tool_calls, text = response
         context.emit('model_response', {'step': step + 1, 'elapsed': time.monotonic() - model_started,
@@ -329,6 +335,7 @@ def run_agent(request: str, model, max_steps: int = MAX_STEPS, verbose: bool = T
         if metrics is not None:
             metrics.record(response.stats)
 
+        context.record_replay_items(messages, response)
         if not tool_calls:
             return context.finish(RunStatus.COMPLETED, text + _read_scope_note(reads), messages)
         if final_turn:

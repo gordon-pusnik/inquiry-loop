@@ -12,8 +12,12 @@ def create_model(llm: str = "openai", *, stub: bool = False, model_path=None,
 
         return StubModel()
     if llm == "openai":
-        from inquiry_loop.backends.openai_eng import OpenAIModel
+        from inquiry_loop.backends.openai_eng import OpenAIModel, configured_openai_model
+        from inquiry_loop.backends.openai_responses_eng import OpenAIResponsesModel, uses_responses
 
+        selected = configured_openai_model(model)
+        if uses_responses(selected):
+            return OpenAIResponsesModel(tool_schemas=schemas, model=selected)
         options = {} if model is None else {"model": model}
         return OpenAIModel(tool_schemas=schemas, **options)
     if llm == "airllm":
@@ -35,7 +39,7 @@ def create_model(llm: str = "openai", *, stub: bool = False, model_path=None,
     raise ValueError(f"Unknown LLM backend: {llm}")
 
 
-def chat(messages: list[dict[str, str]], model) -> ModelResponse:
+def chat(messages: list[dict[str, str]], model, *, context=None) -> ModelResponse:
     """Run one text completion. The caller owns history, limits, and model lifetime."""
     if not messages:
         raise ValueError("Chat requires at least one message.")
@@ -50,10 +54,13 @@ def chat(messages: list[dict[str, str]], model) -> ModelResponse:
     if prompt[-1]["role"] != "user" or not prompt[-1]["content"].strip():
         raise ValueError("Chat must end with a nonempty user message.")
 
-    response = ModelResponse.coerce(model.respond(prompt, allow_tools=False),
+    request = context.model_messages(model, prompt) if context is not None else prompt
+    response = ModelResponse.coerce(model.respond(request, allow_tools=False),
                                     getattr(model, "last_stats", None))
     if response.tool_calls or response.finish_reason in ("tool_calls", "function_call"):
         raise ValueError("Chat received an unexpected tool call.")
     if not response.text.strip():
         raise ValueError("Chat received an empty response.")
+    if context is not None:
+        context.record_replay_items(messages, response)
     return response

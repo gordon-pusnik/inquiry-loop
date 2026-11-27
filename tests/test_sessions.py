@@ -165,6 +165,43 @@ class SessionTests(unittest.TestCase):
         finally:
             db.close()
 
+    def test_version_one_migration_preserves_completed_checkpoint(self):
+        path = Path(self.directory.name) / 'legacy.sqlite3'
+        checkpoint = [{'role': 'user', 'content': 'legacy request'}, {'role': 'assistant', 'content': 'legacy reply'}]
+        with contextlib.closing(sqlite3.connect(path)) as db, db:
+            db.executescript('''
+                CREATE TABLE sessions (
+                    id TEXT PRIMARY KEY, created_at TEXT, updated_at TEXT, title TEXT,
+                    backend TEXT, model TEXT, cwd TEXT, history_json TEXT);
+                CREATE TABLE runs (
+                    id TEXT PRIMARY KEY, session_id TEXT REFERENCES sessions(id),
+                    status TEXT, request TEXT, started_at TEXT, finished_at TEXT,
+                    elapsed REAL, stats_json TEXT, answer TEXT, error TEXT);
+                CREATE TABLE events (
+                    id INTEGER PRIMARY KEY, run_id TEXT REFERENCES runs(id),
+                    created_at TEXT, kind TEXT, payload_json TEXT);
+                PRAGMA user_version=1;
+            ''')
+            db.execute('INSERT INTO sessions VALUES(?,?,?,?,?,?,?,?)',
+                       ('legacy-session', 'date', 'date', 'title', 'mlx', 'test-model', os.getcwd(),
+                        json.dumps(checkpoint)))
+            db.execute('INSERT INTO runs(id,session_id,status,request,started_at) VALUES(?,?,?,?,?)',
+                       ('legacy-run', 'legacy-session', 'completed', 'legacy request', 'date'))
+            db.execute('INSERT INTO events VALUES(?,?,?,?,?)',
+                       (1, 'legacy-run', 'date', 'run_finished', '{}'))
+        with contextlib.closing(SessionStore(path)) as migrated:
+            self.assertEqual(migrated.db.execute('PRAGMA user_version').fetchone()[0], 3)
+            runner = SessionRunner(migrated, 'mlx', 'test-model', 'legacy-session')
+            self.assertEqual(runner.mode, 'code')
+            self.assertEqual(json.loads(migrated.get_session(runner.sid)['history_json']), checkpoint)
+            self.assertEqual(migrated.runs(runner.sid)[0]['id'], 'legacy-run')
+            self.assertEqual(migrated.events('legacy-run')[0]['id'], 1)
+            model = Model()
+            runner.run('next request', model, agent.run_agent, RequestMetrics(), 16)
+            self.assertEqual(model.histories[0][1:3], checkpoint)
+        with contextlib.closing(SessionStore(path)) as reopened:
+            self.assertEqual(len(reopened.runs('legacy-session')), 2)
+
     def test_shared_response_copies_stats_and_normalizes_calls(self):
         stats = {'generation_tokens': 12}
         response = ModelResponse.from_parts([tool()], 'text', stats, 'tool_calls')

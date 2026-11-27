@@ -14,12 +14,16 @@ class RequestMetrics:
         self.kind = None
         self.complete = True
         self.calls = 0
+        self.history_turns_omitted = 0
 
     def record(self, stats):
         self.calls += 1
         if not isinstance(stats, dict):
             self.complete = False
             return
+        omitted = stats.get("history_turns_omitted")
+        if type(omitted) is int and omitted > 0:
+            self.history_turns_omitted += omitted
         tokens = _number(stats.get("generation_tokens"))
         seconds = _number(stats.get("generation_seconds"))
         rate = _number(stats.get("generation_tps"))

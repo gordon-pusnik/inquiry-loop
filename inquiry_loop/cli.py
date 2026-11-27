@@ -10,9 +10,12 @@ import sys
 import time
 
 from inquiry_loop.agent import MAX_STEPS, create_model, run_agent
+from inquiry_loop.backends.openai_responses_eng import REASONING_EFFORTS
 from inquiry_loop.backends.stub_eng import StubModel
+from inquiry_loop.engine import chat
+from inquiry_loop.interactive_models import InteractiveModels, SWITCHABLE, close_model
 from inquiry_loop.request_metrics import RequestMetrics
-from inquiry_loop.response_types import RunStatus
+from inquiry_loop.response_types import RunContext, RunStatus
 from inquiry_loop.session_store import DEFAULT_DB, SessionRunner, SessionStore
 
 
@@ -42,8 +45,36 @@ def _research_workflow(on_evidence, mode, cutoff=None):
                    enforce=mode == 'enforce', **options)
 
 
+def _research_settings(mode, cutoff=None):
+    settings = {'evidence_check': mode}
+    if mode == 'enforce':
+        from inquiry_loop.research import DEFAULT_SUPPORTED_CUTOFF
+
+        settings['supported_cutoff'] = DEFAULT_SUPPORTED_CUTOFF if cutoff is None else cutoff
+    return settings
+
+
+def _run_chat(request, model, *, max_steps, metrics, context=None):
+    context = context if context is not None else RunContext()
+    messages = [*context.previous_messages, {"role": "user", "content": request}]
+    context.emit('model_started', {'step': 1, 'message_count': len(messages)})
+    started = time.monotonic()
+    response = chat(messages, model, context=context)
+    context.emit('model_response', {'step': 1, 'elapsed': time.monotonic() - started,
+                                    'tool_calls': response.tool_calls, 'text': response.text,
+                                    'stats': response.stats, 'finish_reason': response.finish_reason})
+    if metrics is not None:
+        metrics.record(response.stats)
+    return context.finish(RunStatus.COMPLETED, response.text, messages)
+
+
 def _print_run_output(answer, evidence_checks, metrics, elapsed, backend):
     print(answer)
+    if metrics.history_turns_omitted:
+        count = metrics.history_turns_omitted
+        turns = 'turn' if count == 1 else 'turns'
+        print(f'\nContext: omitted {count} older conversation {turns} from the model prompt. '
+              'Saved history was retained.')
     if evidence_checks:
         from inquiry_loop.research import format_evidence_check
 
@@ -61,27 +92,71 @@ def _model_identity(model, backend):
     return identity
 
 
+def _print_model_status(models, mode, research_settings):
+    if models.model is None:
+        print('No active model. Choose an engine with /model.')
+        return
+    model_path = getattr(models.model, 'model_path', None) if models.backend == 'llama' else None
+    label = model_path or _model_identity(models.model, models.backend)
+    print(f'Engine: {models.backend}\nModel: {label}')
+    mode_label = f"research ({research_settings['evidence_check']})" if mode == 'research' else mode
+    print(f'Mode: {mode_label}')
+    _print_reasoning_effort(models)
+
+
+def _print_reasoning_effort(models):
+    effort = getattr(models.model, 'reasoning_effort', None) if models.backend == 'openai' else None
+    print(f"Reasoning effort: {effort if effort in REASONING_EFFORTS else 'unavailable'}")
+
+
 def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS,
-                    runner: SessionRunner | None = None, *, backend: str) -> None:
-    """Reuse one backend; traced sessions retain completed conversation turns."""
+                    runner: SessionRunner | None = None, *, backend: str, model_options=None) -> None:
+    """Own the interactive models and keep traced sessions tied to their model."""
+    models = InteractiveModels(create_model, backend, model, model_options)
+    try:
+        _interactive_loop(models, initial_request, max_steps, runner)
+    finally:
+        models.close()
+
+
+def _interactive_loop(models, initial_request, max_steps, runner):
     try:
         import readline  # Importing enables terminal line editing for input().
     except ImportError:
         pass
 
     if runner is None:
-        print("Interactive mode: /search, /download, /research, /new, /status, /help, /quit. Each task starts fresh (tracing disabled).")
+        print("Interactive mode: /model, /effort, /chat, /code, /research, /search, /download, /new, /status, /help, /quit. Each task starts fresh (tracing disabled).")
     else:
-        print("Interactive mode: /search, /download, /research, /new, /status, /sessions, /resume ID, /stats [ID], /help, /quit.")
+        print("Interactive mode: /model, /effort, /chat, /code, /research, /search, /download, /new, /status, /sessions, /resume ID, /stats [ID], /help, /quit.")
         if runner.sid:
             print(f"Resumed session {runner.sid}; enter a new request to continue. No tools were replayed.")
     pending = initial_request.strip()
-    run_fn = run_agent
+    mode = runner.mode if runner is not None else 'code'
+    research_settings = _research_settings('shadow')
+    research_workflow = None
     evidence_checks = []
+    store = runner.store if runner is not None else None
+    runners = {(runner.backend, runner.model, mode): runner} if runner is not None else {}
+
+    def select_runner():
+        if store is None or models.model is None:
+            return None
+        backend = models.backend
+        identity = _model_identity(models.model, backend)
+        key = (backend, identity, mode)
+        if key not in runners:
+            runners[key] = SessionRunner(store, backend, identity, mode=mode)
+        return runners[key]
+
     try:
         while True:
-            request = pending or input("\nYou> ").strip()
+            request = pending
             pending = ""
+            if not request:
+                # libedit counts the prompt width when redrawing history.
+                print()
+                request = input("You> ").strip()
             if request.lower() in ("/quit", "/exit", "quit", "exit"):
                 break
             if not request:
@@ -90,17 +165,44 @@ def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS
                 command, *arguments = request.split()
                 try:
                     if command == '/help' and not arguments:
+                        print('/model openai|mlx|llama: switch to the configured model')
+                        print('/effort [low|medium|high|max]: show or set the active OpenAI reasoning effort')
                         print('/search [--mlx|--gguf] TERM: find local models on Hugging Face')
                         print('/download OWNER/REPO [FILENAME]: cache a Hugging Face model or file')
-                        print('/status: show the active engine and model')
+                        print('/status: show the active engine, model, and mode')
+                        print('/chat: text chat; /code: general agent with tools')
                         print('/research [off|shadow|enforce [threshold]]: switch to research; /new: clean conversation in default mode; /sessions: list saved sessions; /resume ID: restore a completed checkpoint; /stats [ID]: run outcomes and timings; /quit: exit.')
                         continue
                     if command == '/status':
                         if arguments:
                             raise ValueError('Usage: /status')
-                        model_path = getattr(model, 'model_path', None) if backend == 'llama' else None
-                        label = model_path or _model_identity(model, backend)
-                        print(f'Engine: {backend}\nModel: {label}')
+                        _print_model_status(models, mode, research_settings)
+                        continue
+                    if command == '/effort':
+                        if arguments:
+                            if len(arguments) != 1 or arguments[0] not in REASONING_EFFORTS:
+                                raise ValueError('Usage: /effort [low|medium|high|max]')
+                            if (models.backend != 'openai'
+                                    or getattr(models.model, 'reasoning_effort', None) not in REASONING_EFFORTS):
+                                raise ValueError('Reasoning effort is unavailable for the active model.')
+                            models.model.reasoning_effort = arguments[0]
+                        _print_reasoning_effort(models)
+                        continue
+                    if command == '/model':
+                        if len(arguments) != 1 or arguments[0] not in SWITCHABLE:
+                            raise ValueError('Usage: /model openai|mlx|llama')
+                        try:
+                            models.switch(arguments[0])
+                        finally:
+                            runner = select_runner()
+                        _print_model_status(models, mode, research_settings)
+                        continue
+                    if command in ('/chat', '/code'):
+                        if arguments:
+                            raise ValueError(f'Usage: {command}')
+                        mode = command[1:]
+                        runner = select_runner()
+                        print(f'{mode.capitalize()} mode.')
                         continue
                     if command in ('/search', '/download'):
                         try:
@@ -111,35 +213,48 @@ def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS
                         run_model_command(command, arguments)
                         continue
                     if command == '/research':
-                        if isinstance(model, StubModel):
+                        if isinstance(models.model, StubModel):
                             raise ValueError('/research requires a real synthesis backend.')
-                        mode, *threshold = arguments or ['shadow']
-                        if mode not in ('off', 'shadow', 'enforce') or (threshold and
-                                (mode != 'enforce' or len(threshold) != 1)):
+                        evidence_mode, *threshold = arguments or ['shadow']
+                        if evidence_mode not in ('off', 'shadow', 'enforce') or (threshold and
+                                (evidence_mode != 'enforce' or len(threshold) != 1)):
                             raise ValueError('Usage: /research [off|shadow|enforce [threshold]]')
                         cutoff = _evidence_threshold(threshold[0]) if threshold else None
-                        run_fn = _research_workflow(evidence_checks.append, mode, cutoff)
-                        print(f'Research mode (evidence check: {mode}). Enter a standalone public question.')
+                        research_workflow = _research_workflow(evidence_checks.append, evidence_mode, cutoff)
+                        research_settings = _research_settings(evidence_mode, cutoff)
+                        mode = 'research'
+                        runner = select_runner()
+                        print(f'Research mode (evidence check: {evidence_mode}). Enter a standalone public question.')
                         continue
                     if command == '/new' and not arguments:
+                        if models.model is None:
+                            raise ValueError('No active model. Choose an engine with /model.')
+                        mode = 'code'
+                        runner = select_runner()
                         if runner is not None:
                             print(f'New session {runner.new()} (default mode)')
                         else:
                             print('Default mode (tracing disabled).')
-                        run_fn = run_agent
                         continue
-                    if runner is None:
+                    if store is None:
                         raise ValueError('Session commands require tracing; restart without --no-trace.')
                     if command == '/sessions' and not arguments:
-                        sessions = runner.store.list_sessions()
+                        sessions = store.list_sessions()
                         print('Saved sessions:' if sessions else 'No saved sessions.')
                         for session in sessions:
                             title = ' '.join(session['title'].split())
-                            print(f"{session['id']}  {session['backend']} / {session['model']}  {title}")
+                            print(f"{session['id']}  {session['backend']} / {session['model']}  [{session['mode']}] {title}")
                     elif command == '/resume' and len(arguments) == 1:
-                        print(f'Resumed session {runner.resume(arguments[0])}; enter a new request. No tools were replayed.')
+                        if models.model is None:
+                            raise ValueError('No active model. Choose an engine with /model.')
+                        identity = _model_identity(models.model, models.backend)
+                        runner = SessionRunner(store, models.backend, identity, arguments[0])
+                        mode = runner.mode
+                        runners[(models.backend, identity, mode)] = runner
+                        print(f'Resumed session {runner.sid}; enter a new request. No tools were replayed.')
                     elif command == '/stats' and len(arguments) <= 1:
-                        print(runner.stats_text(arguments[0] if arguments else None))
+                        stats_runner = runner or SessionRunner(store, models.backend, None)
+                        print(stats_runner.stats_text(arguments[0] if arguments else None))
                     else:
                         raise ValueError('Unknown command or arguments. Use /help for session commands.')
                 except ValueError as exc:
@@ -147,17 +262,28 @@ def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS
                 continue
             # The stub's script represents a whole task, unlike real backends
             # whose loaded weights/client are reusable across fresh tasks.
-            if isinstance(model, StubModel):
-                model.i = 0
+            if models.model is None:
+                _print_model_status(models, mode, research_settings)
+                continue
+            if isinstance(models.model, StubModel):
+                models.model.i = 0
             metrics = RequestMetrics()
             evidence_checks.clear()
             started = time.perf_counter()
             try:
+                run_fn = run_agent
+                if mode == 'chat':
+                    run_fn = _run_chat
+                elif mode == 'research':
+                    if research_workflow is None:
+                        research_workflow = _research_workflow(evidence_checks.append, 'shadow')
+                    run_fn = research_workflow
                 if runner is None:
-                    answer = run_fn(request, model, max_steps=max_steps, metrics=metrics)
+                    answer = run_fn(request, models.model, max_steps=max_steps, metrics=metrics)
                 else:
                     previous_sid = runner.sid
-                    result = runner.run(request, model, run_fn, metrics, max_steps)
+                    settings = research_settings if mode == 'research' else None
+                    result = runner.run(request, models.model, run_fn, metrics, max_steps, run_settings=settings)
                     if runner.sid != previous_sid:
                         print(f'Session {runner.sid}')
                     print(f'Run {result.run_id} [{result.status.value}]')
@@ -169,7 +295,7 @@ def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS
             except Exception as exc:
                 print(f"Error: {exc}")
                 continue
-            _print_run_output(answer, evidence_checks, metrics, elapsed, backend)
+            _print_run_output(answer, evidence_checks, metrics, elapsed, models.backend)
     except (EOFError, KeyboardInterrupt):
         print()
     print("Interactive session ended.")
@@ -230,11 +356,14 @@ def main(argv=None) -> int:
     evidence_checks = []
     try:
         run_fn = run_agent
+        run_settings = None
         if args.research:
             from inquiry_loop.research import research_question
 
             research_question(" ".join(args.request))
-            run_fn = _research_workflow(evidence_checks.append, args.evidence_check or 'shadow', cutoff)
+            evidence_mode = args.evidence_check or 'shadow'
+            run_fn = _research_workflow(evidence_checks.append, evidence_mode, cutoff)
+            run_settings = _research_settings(evidence_mode, cutoff)
         options = {"stub": args.stub, "model_path": args.model_path}
         if args.llm == "strata":
             options.update(base_url=args.base_url, model=args.model)
@@ -245,16 +374,26 @@ def main(argv=None) -> int:
         runner = None
         if not args.no_trace:
             store = SessionStore(args.db)
-            runner = SessionRunner(store, backend, _model_identity(model, backend), args.resume)
+            runner = SessionRunner(store, backend, _model_identity(model, backend), args.resume,
+                                   mode='research' if args.research else 'code')
         if args.interactive:
             print(f"Initialized backend in {time.perf_counter() - started:.2f} seconds.")
-            run_interactive(model, " ".join(args.request), max_steps=args.max_steps, runner=runner, backend=backend)
+            try:
+                run_interactive(model, " ".join(args.request), max_steps=args.max_steps, runner=runner,
+                                backend=backend, model_options=options)
+            finally:
+                model = None  # The interactive loop owns backend cleanup.
         else:
             request = " ".join(args.request) or "What is in this directory?"
             if runner is None:
                 answer = run_fn(request, model, max_steps=args.max_steps, metrics=metrics)
             else:
-                result = runner.run(request, model, run_fn, metrics, args.max_steps)
+                if args.resume and runner.mode == 'chat':
+                    run_fn = _run_chat
+                elif args.resume and runner.mode == 'research':
+                    run_fn = _research_workflow(evidence_checks.append, 'shadow')
+                    run_settings = _research_settings('shadow')
+                result = runner.run(request, model, run_fn, metrics, args.max_steps, run_settings=run_settings)
                 print(f'Session {result.session_id}; run {result.run_id} [{result.status.value}]')
                 if result.error:
                     print(f'Error: {result.error}')
@@ -271,8 +410,7 @@ def main(argv=None) -> int:
         parser.exit(1, f"Error: {exc}\n")
     finally:
         try:
-            if model is not None and callable(getattr(model, "close", None)):
-                model.close()
+            close_model(model)
         finally:
             if store is not None:
                 store.close()

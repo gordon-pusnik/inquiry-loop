@@ -7,6 +7,7 @@ Run these commands from the repository root. See the [quickstart](../README.md#q
 | Setting | Used by |
 | --- | --- |
 | `OPENAI_API_KEY` | OpenAI model requests. `AGENT_MODEL` overrides the default `gpt-4o-mini`. |
+| `OPENAI_REASONING_EFFORT` | Initial reasoning effort for GPT-6.2 Sol and Astra. Values are `low`, `medium`, `high`, and `max`. Defaults to `medium`. |
 | `LLAMA_MODEL_PATH` | Default local GGUF file for `--llm=llama`. `--model-path` overrides it for one run. |
 | `LLAMA_SERVER` | Optional path to the unified `llama` or standalone `llama-server` executable. |
 | `TAVILY_API_KEY` | Ranked search with Tavily, the general-agent default and the research-mode provider. |
@@ -22,7 +23,7 @@ python3 agent.py "List the files here and summarize requirements.txt"
 python3 agent.py --llm=mlx --interactive
 ```
 
-The general agent can use `list_dir`, `read_file`, `search_file`, `write_file`, `run_shell`, and `search_web`. File reads return a continuation offset for large files. The CLI reports partial inspection when the recorded reads leave gaps. `run_shell` launches an allowlisted executable directly with output and time limits. The default run budget is 16 model responses, including the final answer. Use `--max-steps` to change it.
+The general agent can use `list_dir`, `read_file`, `search_file`, `write_file`, `run_shell`, and `search_web`. File reads return a continuation offset for large files. The CLI reports partial inspection when the recorded reads leave gaps. `run_shell` launches allowlisted executables, including `git`, with output and time limits. In `/code` mode, you can ask the agent to run commands such as `git status --short`, `git diff`, or `git log -5 --oneline`. The default run budget is 16 model responses, including the final answer. Use `--max-steps` to change it.
 
 To check search by itself or ask the general agent for sources, run:
 
@@ -37,7 +38,7 @@ python3 agent.py "Find the official Python asyncio Queue.shutdown documentation 
 python3 agent.py --research 'Which gpt-oss models did OpenAI announce in August 2025, and under what license?'
 ```
 
-One-shot `--research` requires a standalone question and a real synthesis backend; it cannot be combined with `--interactive`, `--resume`, or `--stub`. In an interactive session, type `/research` and then enter a standalone public question. Each question can be up to 400 characters and 50 words. Research turns stay in the active session. Enter `/new` to start a fresh session in the general agent mode.
+One-shot `--research` requires a standalone question and a real synthesis backend; it cannot be combined with `--interactive`, `--resume`, or `--stub`. In an interactive session, type `/research` and then enter a standalone public question. Each question can be up to 400 characters and 50 words. The CLI saves research turns in a separate research conversation and presents each question to the model on its own. Enter `/new` to start a fresh session in the general agent mode.
 
 ```text
 You> /research
@@ -63,9 +64,13 @@ Use the Left and Right arrow keys to move within a question before submitting it
 
 | Command | Behavior |
 | --- | --- |
+| `/model openai\|mlx\|llama` | Switch to that engine's configured model and keep the active research settings. |
+| `/effort [low\|medium\|high\|max]` | Show or set reasoning effort for a supported OpenAI model. |
+| `/chat` | Enter text chat and restore its conversation for the current model. Chat makes a single model call per turn and uses no tools. |
+| `/code` | Enter the general agent and restore its tool-using conversation. This is the default at launch. |
 | `/search [--mlx\|--gguf] TERM` | Find up to five local models on Hugging Face. |
 | `/download OWNER/REPO [FILENAME]` | Save a model snapshot or selected file to the Hugging Face cache. |
-| `/status` | Show the active engine and model ID or local file path. Works with `--no-trace`. |
+| `/status` | Show the active engine, model ID or local file path, mode, and reasoning effort. Works with `--no-trace`. |
 | `/research [off\|shadow\|enforce [threshold]]` | Switch to research in the current session. With no argument, use `shadow`. |
 | `/new` | Start a clean session in the general agent mode while keeping the model loaded. |
 | `/sessions` | List saved sessions and backend identities. |
@@ -79,13 +84,33 @@ For example, with a local GGUF loaded:
 You> /status
 Engine: llama
 Model: /path/to/model.gguf
+Mode: chat
+Reasoning effort: unavailable
 ```
 
 For llama.cpp, `/status` shows the path selected by `--model-path` or `LLAMA_MODEL_PATH`, including the GGUF filename when it comes from a Hugging Face snapshot. For MLX, it shows the model repository ID or local model directory.
 
-The default database is `.agent/sessions.sqlite3`. Use `--db PATH` to choose another location or `--no-trace` to work without persistence. With tracing disabled, `/research` and `/new` still switch modes. Resume requires the original backend, model identity, and working directory. It restores the last completed checkpoint without replaying tool calls. From the command line, use `python3 agent.py --resume ID --interactive`, or give `--resume ID` a follow-up request. Select the original backend and model if they differ from the defaults.
+Use `/model openai`, `/model mlx`, or `/model llama` to switch without exiting. The command keeps the current mode and uses the selected engine's `.env` settings. Launch flags such as `--model-path` apply to the initial load. The CLI keeps a local model resident during a switch to OpenAI and unloads it before loading a different local model. Traced conversations stay with the backend, model, and mode that created them. Returning to that combination restores its active conversation.
+
+The default database is `.agent/sessions.sqlite3`. Use `--db PATH` to choose another location or `--no-trace` to work without persistence. With tracing disabled, mode switches still work and each request starts with fresh history. Resume requires the original backend, model identity, and working directory. It restores the mode and last completed checkpoint without replaying tool calls. Research resumes in shadow mode in a new CLI process. From the command line, use `python3 agent.py --resume ID --interactive`, or give `--resume ID` a follow-up request. Select the original backend and model if they differ from the defaults.
 
 Each run’s timing summary starts with the selected backend (for example, `mlx processed request in …`) and reports elapsed time and tokens per second when available. Interactive mode reports model initialization separately. Local decode speed and API request throughput use different timing bases.
+
+### Compare a local model with OpenAI
+
+With your MLX model configured and `AGENT_MODEL=gpt-6.2-sol` set in `.env`, start with `python3 agent.py --llm=mlx --interactive`. Enter the same prompt on both engines.
+
+```text
+You> /chat
+You> Explain SQLite transactions in two sentences.
+You> /model openai
+You> /effort low
+You> Explain SQLite transactions in two sentences.
+You> /model mlx
+You> /status
+```
+
+After the final switch you are back in your MLX chat. Any follow-up uses that chat's history. Use a fresh `/research` question for a cited comparison. Each research request uses only that question and its retrieved evidence.
 
 ## Find and download models
 
@@ -120,6 +145,18 @@ For MLX, set `MLX_MODEL` in `.env` or select a model on the command line. The bu
 
 For Strata, set `STRATA_BASE_URL` and `STRATA_MODEL` in `.env`, or pass `--base-url` and `--model`. The default endpoint is `http://127.0.0.1:8080/v1`, and the client automatically selects the model when the server lists exactly one. Set `STRATA_API_KEY` if the server requires it. `STRATA_MAX_TOKENS` sets the output budget. See the [Strata integration notes](plans/STRATA_BACKEND_PLAN.md) for details.
 
+### OpenAI models and reasoning effort
+
+Set `AGENT_MODEL=gpt-6.2-sol` or `AGENT_MODEL=gpt-6.2-astra` in `.env`. Both use the OpenAI Responses API for chat, coding tools, and research synthesis. The default `gpt-4o-mini` uses Chat Completions. [OpenAI model guide](https://developers.openai.com/api/docs/guides/latest-model)
+
+```bash
+AGENT_MODEL=gpt-6.2-sol OPENAI_REASONING_EFFORT=medium python3 agent.py --llm=openai --interactive
+```
+
+Use `/effort` to see the current effort and `/effort low`, `/effort medium`, `/effort high`, or `/effort max` to change it. The setting applies to subsequent requests and persists when you switch away from the model and back in the same process. Local models and legacy OpenAI models report effort as unavailable.
+
+The Responses adapter sends requests with `store=false`. Tracing stores replayable Responses items, including encrypted reasoning, in the local SQLite checkpoint so chat and code can resume. Research still sends each question and its evidence independently. [OpenAI reasoning guide](https://developers.openai.com/api/docs/guides/reasoning#preserve-reasoning-without-stored-responses)
+
 ### Local GGUF models with llama.cpp
 
 Install the [unified llama CLI](https://llama.app/docs/installation) or use a [llama.cpp release](https://github.com/ggml-org/llama.cpp/releases) for your platform. Inquiry Loop looks for `llama-server` and then `llama` on your PATH. You can set `LLAMA_SERVER` to an explicit executable path, such as `LLAMA_SERVER=~/.local/bin/llama` in `.env`. Inquiry Loop invokes `llama serve` for the unified CLI, binds to loopback, and stops the server when the session exits. For general agent tasks, choose a GGUF with a [tool-aware Jinja chat template](https://github.com/ggml-org/llama.cpp/blob/master/docs/function-calling.md).
@@ -131,6 +168,8 @@ python3 agent.py --llm=llama --model-path /path/to/model.gguf --research --evide
 ```
 
 Set `LLAMA_MODEL_PATH` in `.env` to omit `--model-path`. Saved sessions use the resolved file path to identify the model. Set `LLAMA_CONTEXT_SIZE` (default `8192`), `LLAMA_MAX_TOKENS` (default `2048`), `LLAMA_GPU_LAYERS` (default `999`, use `0` for CPU), or `LLAMA_TIMEOUT` (default `300` seconds) to suit the model and hardware.
+
+When a llama.cpp request runs out of context, Inquiry Loop retries with fewer complete prior conversation turns. It keeps the current request and its tool results together and reports how many turns it omitted. The full history stays in the saved session. If the current task alone exceeds the window, narrow the task or increase `LLAMA_CONTEXT_SIZE`.
 
 The llama.cpp equivalents of `MLX_MODEL`, `MLX_MAX_TOKENS`, and `MLX_MAX_CONTEXT_TOKENS` are `LLAMA_MODEL_PATH`, `LLAMA_MAX_TOKENS`, and `LLAMA_CONTEXT_SIZE`. For the Qwen3 30B Instruct-2507 model above, download the [Q4_K_M GGUF](https://huggingface.co/bartowski/Qwen_Qwen3-30B-A3B-Instruct-2507-GGUF/blob/main/Qwen_Qwen3-30B-A3B-Instruct-2507-Q4_K_M.gguf) to the same Hugging Face cache as the MLX weights.
 

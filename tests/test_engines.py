@@ -42,7 +42,8 @@ class BackendTests(unittest.TestCase):
             self.assertEqual(error.exception.code, 2)
 
     def test_factory_loads_selected_engine(self):
-        with patch("inquiry_loop.backends.openai_eng.OpenAIModel") as engine:
+        with (patch("inquiry_loop.backends.openai_eng.configured_openai_model", return_value="gpt-4o-mini"),
+              patch("inquiry_loop.backends.openai_eng.OpenAIModel") as engine):
             self.assertIs(agent.create_model(), engine.return_value)
             engine.assert_called_once_with(tool_schemas=agent.TOOL_SCHEMAS)
         with patch("inquiry_loop.backends.airllm_eng.AirLLMModel") as engine:

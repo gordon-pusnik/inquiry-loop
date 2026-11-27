@@ -14,25 +14,31 @@ from inquiry_loop.paths import ENV_FILE
 from inquiry_loop.response_types import ModelResponse
 
 
+def resolve_server(model_path=None):
+    from dotenv import load_dotenv
+
+    load_dotenv(ENV_FILE, override=False)
+    selected = model_path or os.environ.get("LLAMA_MODEL_PATH")
+    if not selected:
+        raise ValueError("llama.cpp needs a local GGUF file. Set --model-path or LLAMA_MODEL_PATH.")
+    path = Path(selected).expanduser()
+    if path.suffix.lower() != ".gguf" or not path.is_file():
+        raise ValueError(f"llama.cpp needs an existing .gguf model file: {path}")
+    configured_server = os.environ.get("LLAMA_SERVER")
+    if configured_server:
+        binary = shutil.which(os.path.expanduser(configured_server))
+    else:
+        binary = shutil.which("llama-server") or shutil.which("llama")
+    if not binary:
+        raise ValueError("Could not find llama-server or llama. Install llama.cpp or set LLAMA_SERVER to its executable.")
+    return path, binary
+
+
 class LlamaModel:
     def __init__(self, *, tool_schemas, model_path=None):
         import httpx
-        from dotenv import load_dotenv
 
-        load_dotenv(ENV_FILE, override=False)
-        selected = model_path or os.environ.get("LLAMA_MODEL_PATH")
-        if not selected:
-            raise ValueError("llama.cpp needs a local GGUF file. Set --model-path or LLAMA_MODEL_PATH.")
-        path = Path(selected).expanduser()
-        if path.suffix.lower() != ".gguf" or not path.is_file():
-            raise ValueError(f"llama.cpp needs an existing .gguf model file: {path}")
-        configured_server = os.environ.get("LLAMA_SERVER")
-        if configured_server:
-            binary = shutil.which(os.path.expanduser(configured_server))
-        else:
-            binary = shutil.which("llama-server") or shutil.which("llama")
-        if not binary:
-            raise ValueError("Could not find llama-server or llama. Install llama.cpp or set LLAMA_SERVER to its executable.")
+        path, binary = resolve_server(model_path)
         server_command = [binary]
         if Path(binary).stem.lower() == "llama":
             server_command.append("serve")
@@ -41,10 +47,10 @@ class LlamaModel:
         self.model_id = str(self.model_path.resolve())
         self.tool_schemas = tool_schemas
         self.max_tokens = int(os.environ.get("LLAMA_MAX_TOKENS", "2048"))
-        context = int(os.environ.get("LLAMA_CONTEXT_SIZE", "8192"))
+        self.max_context_tokens = int(os.environ.get("LLAMA_CONTEXT_SIZE", "8192"))
         gpu_layers = int(os.environ.get("LLAMA_GPU_LAYERS", "999"))
         timeout = int(os.environ.get("LLAMA_TIMEOUT", "300"))
-        if not 0 < self.max_tokens < context or gpu_layers < 0 or timeout <= 0:
+        if not 0 < self.max_tokens < self.max_context_tokens or gpu_layers < 0 or timeout <= 0:
             raise ValueError("Require 0 < LLAMA_MAX_TOKENS < LLAMA_CONTEXT_SIZE, "
                              "nonnegative LLAMA_GPU_LAYERS, and positive LLAMA_TIMEOUT.")
 
@@ -60,7 +66,7 @@ class LlamaModel:
         command = [
             *server_command, "--model", str(self.model_path), "--alias", self._alias, "--jinja", "--no-webui",
             "--host", "127.0.0.1", "--port", str(port), "--parallel", "1",
-            "--ctx-size", str(context), "--gpu-layers", str(gpu_layers), "--no-context-shift",
+            "--ctx-size", str(self.max_context_tokens), "--gpu-layers", str(gpu_layers), "--no-context-shift",
             "--log-verbosity", "2",
         ]
         with tempfile.TemporaryFile() as log:
@@ -104,9 +110,43 @@ class LlamaModel:
             time.sleep(0.1)
         raise RuntimeError("Timed out loading the GGUF in llama-server. Check available memory or increase LLAMA_TIMEOUT.")
 
-    def respond(self, messages, *, allow_tools=True):
+    def _complete(self, payload):
         import httpx
 
+        try:
+            reply = self._client.post("/v1/chat/completions", json=payload)
+        except httpx.TimeoutException as exc:
+            raise RuntimeError("llama-server timed out. Increase LLAMA_TIMEOUT or request a shorter response.") from exc
+        except httpx.RequestError as exc:
+            raise RuntimeError("Could not reach the local llama-server.") from exc
+        try:
+            body = reply.json()
+        except ValueError:
+            body = None
+        return reply, body
+
+    def _context_exceeded(self, reply, body):
+        if not isinstance(body, dict):
+            return False
+        error = body.get("error")
+        if reply.status_code == 400 and isinstance(error, dict):
+            if error.get("type") == "exceed_context_size_error":
+                return True
+            message = error.get("message")
+            return (error.get("type") == "invalid_request_error" and isinstance(message, str)
+                    and "exceeds the available context size" in message.lower())
+        if reply.is_success:
+            choices = body.get("choices")
+            usage = body.get("usage")
+            if (isinstance(choices, list) and len(choices) == 1 and isinstance(choices[0], dict)
+                    and choices[0].get("finish_reason") == "length" and isinstance(usage, dict)):
+                prompt = usage.get("prompt_tokens")
+                generated = usage.get("completion_tokens")
+                return (type(prompt) is int and type(generated) is int
+                        and prompt + generated >= self.max_context_tokens - 1)
+        return False
+
+    def respond(self, messages, *, allow_tools=True):
         self.last_stats = {}
         if self._process is None or self._process.poll() is not None:
             raise RuntimeError("llama-server is not running.")
@@ -115,17 +155,25 @@ class LlamaModel:
         if allow_tools and self.tool_schemas:
             payload.update(tools=self.tool_schemas, tool_choice="auto", parallel_tool_calls=False)
         started = time.monotonic()
-        try:
-            reply = self._client.post("/v1/chat/completions", json=payload)
-        except httpx.TimeoutException as exc:
-            raise RuntimeError("llama-server timed out. Increase LLAMA_TIMEOUT or request a shorter response.") from exc
-        except httpx.RequestError as exc:
-            raise RuntimeError("Could not reach the local llama-server.") from exc
+        reply, result = self._complete(payload)
+        omitted_messages = omitted_turns = 0
+        if self._context_exceeded(reply, result):
+            turns = [index for index, message in enumerate(messages) if message["role"] == "user"]
+            if len(turns) > 1:
+                # Retry with fewer complete prior turns, keeping the current request and its tool results.
+                for omitted_turns in sorted({len(turns) // 2, len(turns) - 1}):
+                    omitted_messages = turns[omitted_turns] - turns[0]
+                    payload["messages"] = messages[:turns[0]] + messages[turns[omitted_turns]:]
+                    reply, result = self._complete(payload)
+                    if not self._context_exceeded(reply, result):
+                        break
+            if self._context_exceeded(reply, result):
+                raise ValueError("The current request and its tool results exceed the llama.cpp context window. "
+                                 "Narrow the task or increase LLAMA_CONTEXT_SIZE.")
         if not reply.is_success:
             raise RuntimeError(f"llama-server rejected the completion (HTTP {reply.status_code}). "
                                "Check the model's chat template and context budget.")
         try:
-            result = reply.json()
             choice, = result["choices"]
             finish = choice["finish_reason"]
             message = choice["message"]
@@ -154,6 +202,8 @@ class LlamaModel:
         self.last_stats = {"prompt_tokens": usage.get("prompt_tokens"),
                            "generation_tokens": usage.get("completion_tokens"),
                            "generation_seconds": time.monotonic() - started, "speed_kind": "request"}
+        if omitted_turns:
+            self.last_stats.update(history_turns_omitted=omitted_turns, history_messages_omitted=omitted_messages)
         decoded = timings.get("predicted_n")
         milliseconds = timings.get("predicted_ms")
         if type(decoded) is int and decoded > 0 and type(milliseconds) in (int, float) and milliseconds > 0:

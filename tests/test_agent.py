@@ -1,8 +1,10 @@
+import json
 import os
 from pathlib import Path
+import shutil
 import tempfile
 import unittest
-from unittest.mock import mock_open, patch
+from unittest.mock import Mock, mock_open, patch
 
 from inquiry_loop import agent
 
@@ -23,6 +25,20 @@ class ToolTests(unittest.TestCase):
             with self.subTest(command=command):
                 self.assertIn("error", agent.run_shell(command))
         self.assertEqual(agent.run_shell('echo "hello world"')["stdout"], "hello world\n")
+
+    @unittest.skipUnless(shutil.which("git"), "requires Git")
+    def test_agent_can_run_git_through_shell_tool(self):
+        model = Mock()
+        model.respond.side_effect = [
+            ([{"id": "git", "function": {"name": "run_shell", "arguments": '{"command":"git --version"}'}}], ""),
+            ([], "Git is available."),
+        ]
+        answer = agent.run_agent("Check the Git version", model, verbose=False)
+        self.assertEqual(answer, "Git is available.")
+        observation = json.loads(model.respond.call_args.args[0][-1]["content"])
+        self.assertEqual(observation["exit_code"], 0)
+        self.assertTrue(observation["stdout"].startswith("git version "))
+        self.assertFalse(observation["timed_out"])
 
     def test_read_preview_is_bounded(self):
         opened = mock_open(read_data="x" * 4001)
