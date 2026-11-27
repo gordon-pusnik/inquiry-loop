@@ -3,8 +3,9 @@ import copy
 import io
 from pathlib import Path
 import tempfile
+from types import SimpleNamespace
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from inquiry_loop import agent, cli
 
@@ -71,6 +72,46 @@ class InteractiveTests(unittest.TestCase):
             cli.main(["--no-trace", "-i", "--llm=mlx", "initial task"])
         self.assertEqual(model.histories[0][-1]["content"], "initial task")
         model.close.assert_called_once()
+
+    def test_status_shows_active_model_without_calling_it(self):
+        model = ReusableModel()
+        model.model_id = Path("/models/example.gguf")
+        commands = ["/status extra", "/status", "/quit"]
+        output = io.StringIO()
+        with (patch("inquiry_loop.cli.create_model", return_value=model),
+              patch("builtins.input", side_effect=commands),
+              contextlib.redirect_stdout(output)):
+            self.assertEqual(cli.main(["--llm=llama", "--no-trace", "--interactive"]), 0)
+        self.assertIn("Error: Usage: /status", output.getvalue())
+        self.assertIn("Engine: llama\nModel: /models/example.gguf", output.getvalue())
+        self.assertEqual(model.histories, [])
+
+    def test_hub_commands_do_not_call_the_model(self):
+        model = ReusableModel()
+        output = io.StringIO()
+        commands = ["/search Qwen3-30B-A3B-Instruct-2507", "/download mlx-community/example", "/quit"]
+        with (patch("builtins.input", side_effect=commands),
+              patch("inquiry_loop.providers.hub_models.HfApi") as hub,
+              contextlib.redirect_stdout(output)):
+            api = hub.return_value
+            api.list_models.side_effect = [
+                [SimpleNamespace(id="mlx-community/example")],
+                [SimpleNamespace(id="owner/example-GGUF")],
+            ]
+            api.model_info.return_value = SimpleNamespace(sha="revision", siblings=[
+                SimpleNamespace(rfilename="model.safetensors"),
+            ])
+            api.snapshot_download.return_value = "/cache/snapshots/revision"
+            cli.run_interactive(model, backend="stub")
+        self.assertEqual(api.list_models.call_args_list, [
+            call(search="Qwen3-30B-A3B-Instruct-2507", filter="mlx", limit=5, sort="downloads"),
+            call(search="Qwen3-30B-A3B-Instruct-2507", filter="gguf", limit=5, sort="downloads"),
+        ])
+        api.snapshot_download.assert_called_once_with("mlx-community/example", revision="revision")
+        self.assertIn("1. mlx-community/example (mlx)", output.getvalue())
+        self.assertIn("2. owner/example-GGUF (gguf)", output.getvalue())
+        self.assertIn("Cached model: /cache/snapshots/revision", output.getvalue())
+        self.assertEqual(model.histories, [])
 
     def test_request_failure_does_not_end_session_or_reuse_metrics(self):
         model = ReusableModel()

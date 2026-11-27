@@ -1,6 +1,6 @@
 # Inquiry Loop
 
-Inquiry Loop is a Python CLI for experimenting with local and hosted language models. Use it to inspect files with a tool-using agent, ask cited web research questions, or trace runs in SQLite. A separate benchmark suite evaluates evidence retrieval, cited incident diagnoses, and local versus hosted inference.
+Inquiry Loop is a Python CLI for experimenting with local and hosted language models, including local GGUF models through llama.cpp. Use it to inspect files with a tool-using agent, ask cited web research questions, or trace runs in SQLite. A separate benchmark suite evaluates evidence retrieval, cited incident diagnoses, and local versus hosted inference.
 
 ## Quickstart
 
@@ -26,7 +26,32 @@ python3 agent.py "List the files here and summarize requirements.txt"
 python3 agent.py --interactive
 ```
 
-For cited web research, also set `TAVILY_API_KEY`. Set `TYPESAFE_API_KEY` for the default Jev evidence check, or skip Jev as shown here:
+At the interactive prompt, type `/status` to see the active engine and model. [Interactive commands](docs/cli.md#interactive-sessions)
+
+### Run a local GGUF with llama.cpp
+
+Install the unified `llama` CLI or `llama-server` and download an instruct GGUF with a tool-aware chat template. Inquiry Loop starts the local server when the session opens and stops it when the session exits. [Installation, Hugging Face downloads, and configuration](docs/cli.md#local-gguf-models-with-llamacpp)
+
+```bash
+python3 agent.py --llm=llama --model-path /path/to/model.gguf --interactive
+```
+
+Set `LLAMA_MODEL_PATH` in `.env` to omit `--model-path`. If the unified binary is at `~/.local/bin/llama`, set `LLAMA_SERVER=~/.local/bin/llama` to select it explicitly.
+
+### Find and download models
+
+After installing the Python dependencies, run `python3 agent.py --stub --no-trace --interactive` to open the prompt before you have a model.
+
+```text
+You> /search Qwen3-30B-A3B-Instruct-2507
+You> /download mlx-community/Qwen3-30B-A3B-Instruct-2507-4bit
+```
+
+Search returns up to five MLX and GGUF matches. Use `/search --mlx TERM` or `/search --gguf TERM` to filter. Downloads go to `~/.cache/huggingface/hub` by default. If a GGUF repository offers multiple variants, use `/download OWNER/REPO FILENAME` to choose one. For a downloaded GGUF, set `LLAMA_MODEL_PATH` to the printed path and start a session with `python3 agent.py --llm=llama --interactive`. [Model discovery and downloads](docs/cli.md#find-and-download-models)
+
+### Run cited web research
+
+Set `TAVILY_API_KEY` for web search. Set `TYPESAFE_API_KEY` for the default Jev evidence check, or skip Jev as shown here. With `LLAMA_MODEL_PATH` configured, add `--llm=llama` to synthesize the answer locally.
 
 ```bash
 python3 agent.py --research --evidence-check off \

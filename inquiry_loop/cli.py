@@ -52,6 +52,15 @@ def _print_run_output(answer, evidence_checks, metrics, elapsed, backend):
     print(metrics.summary(elapsed, backend))
 
 
+def _model_identity(model, backend):
+    identity = next((str(value) for value in (getattr(model, 'model_id', None),
+                    getattr(model, 'model', None), getattr(model, 'model_path', None))
+                     if isinstance(value, (str, os.PathLike))), type(model).__name__)
+    if backend == 'strata' and isinstance(getattr(model, 'base_url', None), str):
+        identity += f' @ {model.base_url}'
+    return identity
+
+
 def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS,
                     runner: SessionRunner | None = None, *, backend: str) -> None:
     """Reuse one backend; traced sessions retain completed conversation turns."""
@@ -61,9 +70,9 @@ def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS
         pass
 
     if runner is None:
-        print("Interactive mode: /research, /new, /help, /quit. Each task starts fresh (tracing disabled).")
+        print("Interactive mode: /search, /download, /research, /new, /status, /help, /quit. Each task starts fresh (tracing disabled).")
     else:
-        print("Interactive mode: /research, /new, /sessions, /resume ID, /stats [ID], /help, /quit.")
+        print("Interactive mode: /search, /download, /research, /new, /status, /sessions, /resume ID, /stats [ID], /help, /quit.")
         if runner.sid:
             print(f"Resumed session {runner.sid}; enter a new request to continue. No tools were replayed.")
     pending = initial_request.strip()
@@ -81,7 +90,25 @@ def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS
                 command, *arguments = request.split()
                 try:
                     if command == '/help' and not arguments:
+                        print('/search [--mlx|--gguf] TERM: find local models on Hugging Face')
+                        print('/download OWNER/REPO [FILENAME]: cache a Hugging Face model or file')
+                        print('/status: show the active engine and model')
                         print('/research [off|shadow|enforce [threshold]]: switch to research; /new: clean conversation in default mode; /sessions: list saved sessions; /resume ID: restore a completed checkpoint; /stats [ID]: run outcomes and timings; /quit: exit.')
+                        continue
+                    if command == '/status':
+                        if arguments:
+                            raise ValueError('Usage: /status')
+                        model_path = getattr(model, 'model_path', None) if backend == 'llama' else None
+                        label = model_path or _model_identity(model, backend)
+                        print(f'Engine: {backend}\nModel: {label}')
+                        continue
+                    if command in ('/search', '/download'):
+                        try:
+                            from inquiry_loop.providers.hub_models import run_model_command
+                        except ImportError as exc:
+                            raise ValueError("Install Hugging Face Hub with python3 -m pip install -r requirements.txt.") from exc
+
+                        run_model_command(command, arguments)
                         continue
                     if command == '/research':
                         if isinstance(model, StubModel):
@@ -150,9 +177,9 @@ def run_interactive(model, initial_request: str = "", max_steps: int = MAX_STEPS
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description="Run the tool-using agent.")
-    parser.add_argument("--llm", choices=("openai", "airllm", "strata", "mlx"), default="openai",
+    parser.add_argument("--llm", choices=("openai", "airllm", "strata", "mlx", "llama"), default="openai",
                         help="LLM backend (default: openai)")
-    parser.add_argument("--model-path", help="Local model directory for --llm=airllm or --llm=mlx")
+    parser.add_argument("--model-path", help="Local model directory for AirLLM/MLX, or GGUF file for --llm=llama")
     parser.add_argument("--base-url", help="Strata API base URL (default: http://127.0.0.1:8080/v1)")
     parser.add_argument("--model", help="Strata API model ID or MLX-LM model repository")
     parser.add_argument("--stub", action="store_true", help="Use the scripted offline backend")
@@ -176,8 +203,8 @@ def main(argv=None) -> int:
         parser.error("--resume requires a follow-up request or --interactive")
     if args.max_steps < 1:
         parser.error("--max-steps must be positive")
-    if args.model_path and (args.llm not in ("airllm", "mlx") or args.stub):
-        parser.error("--model-path requires --llm=airllm or --llm=mlx without --stub")
+    if args.model_path and (args.llm not in ("airllm", "mlx", "llama") or args.stub):
+        parser.error("--model-path requires --llm=airllm, --llm=mlx, or --llm=llama without --stub")
     if args.base_url is not None and (args.llm != "strata" or args.stub):
         parser.error("--base-url requires --llm=strata without --stub")
     if args.model is not None and (args.llm not in ("strata", "mlx") or args.stub):
@@ -218,12 +245,7 @@ def main(argv=None) -> int:
         runner = None
         if not args.no_trace:
             store = SessionStore(args.db)
-            identity = next((str(value) for value in (getattr(model, 'model_id', None),
-                                getattr(model, 'model', None), getattr(model, 'model_path', None))
-                             if isinstance(value, (str, os.PathLike))), type(model).__name__)
-            if args.llm == 'strata' and isinstance(getattr(model, 'base_url', None), str):
-                identity += f' @ {model.base_url}'
-            runner = SessionRunner(store, backend, identity, args.resume)
+            runner = SessionRunner(store, backend, _model_identity(model, backend), args.resume)
         if args.interactive:
             print(f"Initialized backend in {time.perf_counter() - started:.2f} seconds.")
             run_interactive(model, " ".join(args.request), max_steps=args.max_steps, runner=runner, backend=backend)

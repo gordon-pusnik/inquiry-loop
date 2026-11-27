@@ -28,6 +28,10 @@ def create_model(llm: str = "openai", *, stub: bool = False, model_path=None,
         from inquiry_loop.backends.mlx_eng import MLXModel
 
         return MLXModel(tool_schemas=schemas, model=model, model_path=model_path)
+    if llm == "llama":
+        from inquiry_loop.backends.llama_eng import LlamaModel
+
+        return LlamaModel(tool_schemas=schemas, model_path=model_path)
     raise ValueError(f"Unknown LLM backend: {llm}")
 
 

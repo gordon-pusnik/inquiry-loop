@@ -9,7 +9,7 @@ python3 -m unittest discover -v
 python3 -m unittest tests.test_research tests.test_research_enforcement tests.test_search tests.test_benchmark_search -v
 ```
 
-The regression suite uses mocks for provider calls and model generation. The optional MLX chat-template check uses Jinja2 (`python3 -m pip install Jinja2`) and a cached Qwen3-4B tokenizer. The project has been exercised with live OpenAI, MLX, Strata, Tavily, and TypeSafe integrations. AirLLM remains experimental.
+The regression suite uses mocks for provider calls and model generation. Run `python3 -m unittest tests.test_llama -v` for llama.cpp server selection, tool calls, session resume, and research coverage. The optional MLX chat-template check uses Jinja2 (`python3 -m pip install Jinja2`) and a cached Qwen3-4B tokenizer. The project has been exercised with live OpenAI, MLX, llama.cpp, Strata, Tavily, and TypeSafe integrations. AirLLM remains experimental.
 
 ## Search and research
 
